@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/alecthomas/jsonschema v0.0.1
+	github.com/davecgh/go-spew v1.1.1
 	github.com/etclabscore/go-jsonschema-traverse v0.0.1
 	github.com/go-openapi/spec v0.19.7
 	github.com/golang/mock v1.4.3 // indirect

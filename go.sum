@@ -125,6 +125,7 @@ github.com/mattn/go-isatty v0.0.5-0.20180830101745-3fb116b82035/go.mod h1:M+lRXT
 github.com/mattn/go-runewidth v0.0.3/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
+github.com/meowsbits/go-jsonschema-traverse v0.0.4 h1:g/2koNHLNaV/uMnlxp+IkLoQARvZnHKDn9bLnB6vxY4=
 github.com/meowsbits/go-jsonschema-traverse v0.0.4/go.mod h1:Ule/owyZHACoZJaMUbw34s5oOpFf6oAqe3htGjau9hU=
 github.com/meowsbits/go-openrpc v0.0.1 h1:n+rqgPTiKA98y3XfvKOd3Vo/UKeA6en1zXhxrFebBQg=
 github.com/meowsbits/go-openrpc v0.0.1/go.mod h1:a1eRkbhd3DYpRH2lnuUsVG+QMTI+v0hGnsis8C9hMrA=

@@ -40,6 +40,7 @@ type DocumentDiscoverOpts struct {
 	SchemaMutations []MutateType
 	MethodBlackList []string
 	TypeMapper      func(r reflect.Type) *jsonschema.Type
+	IgnoredTypes    []interface{}
 }
 
 type argIdent struct {
@@ -448,12 +449,22 @@ func (d *Document) makeContentDescriptor(ty reflect.Type, field *ast.Field, iden
 	cd.Summary = field.Comment.Text()              // field.Doc.Text()
 	cd.Description = fmt.Sprintf("%s", schemaType) // field.Comment.Text()
 
+	var typeMapper func(reflect.Type) *jsonschema.Type
+	if d.discoverOpts != nil {
+		typeMapper = d.discoverOpts.TypeMapper
+	}
+
+	var ignoredTypes []interface{}
+	if d.discoverOpts != nil {
+		ignoredTypes = d.discoverOpts.IgnoredTypes
+	}
+
 	rflctr := jsonschema.Reflector{
 		AllowAdditionalProperties:  true, // false,
 		RequiredFromJSONSchemaTags: true,
 		ExpandedStruct:             false, // false, // false,
-		TypeMapper:                 d.discoverOpts.TypeMapper,
-		//IgnoredTypes:               []interface{}{chaninterface},
+		TypeMapper:                 typeMapper,
+		IgnoredTypes:               ignoredTypes,
 	}
 
 	jsch := rflctr.ReflectFromType(ty)

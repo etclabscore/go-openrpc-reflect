@@ -37,13 +37,12 @@ const (
 
 type DocumentDiscoverOpts struct {
 	Inline            bool
-	SchemaMutations   []MutateType
 	SchemaMutationFns []func(s *spec.Schema) error
 	MethodBlackList   []string
 
 	// TypeMapper gets passed directly to the jsonschema reflection library.
-	TypeMapper        func(r reflect.Type) *jsonschema.Type
-	IgnoredTypes      []interface{}
+	TypeMapper   func(r reflect.Type) *jsonschema.Type
+	IgnoredTypes []interface{}
 }
 
 type argIdent struct {
@@ -58,14 +57,42 @@ func (a argIdent) Name() string {
 	return a.name
 }
 
-type ServerProvider interface {
-	Methods() map[string][]reflect.Value
-	OpenRPCInfo() goopenrpcT.Info
-	OpenRPCExternalDocs() goopenrpcT.ExternalDocs
+/*
+TODO: Use Callback type with some nice methods to replace []reflect.Value]
+and the adhoc receiver/fn logic scattered around for those decisions.
+*/
+type Callback struct {
+	Receiver, Fn reflect.Value
+}
+
+func GoRPCServiceMethods(service interface{}) func() map[string]Callback {
+	return func () map[string]Callback {
+
+		result := make(map[string]Callback)
+
+		rcvr := reflect.ValueOf(service)
+		fmt.Println("rcvr val", rcvr)
+
+		for n := 0; n < rcvr.NumMethod(); n++ {
+			m := reflect.TypeOf(service).Method(n)
+
+			methodName := rcvr.Elem().Type().Name() + "." + m.Name
+			fmt.Println("method name", methodName)
+
+			result[methodName] = Callback{reflect.ValueOf(service), m.Func}
+		}
+		return result
+	}
+}
+
+type ServerProvider struct {
+	Methods             func() map[string]Callback
+	OpenRPCInfo         func() goopenrpcT.Info
+	OpenRPCExternalDocs func() goopenrpcT.ExternalDocs
 }
 
 type Document struct {
-	serverProvider ServerProvider
+	serverProvider *ServerProvider
 	discoverOpts   *DocumentDiscoverOpts
 	spec1          *goopenrpcT.OpenRPCSpec1
 }
@@ -74,7 +101,7 @@ func (d *Document) Document() *goopenrpcT.OpenRPCSpec1 {
 	return d.spec1
 }
 
-func Wrap(serverProvider ServerProvider, opts *DocumentDiscoverOpts) *Document {
+func Wrap(serverProvider *ServerProvider, opts *DocumentDiscoverOpts) *Document {
 	if serverProvider == nil {
 		panic("openrpc-wrap-nil-serverprovider")
 	}
@@ -110,29 +137,25 @@ func (d *Document) Discover() (doc *goopenrpcT.OpenRPCSpec1, err error) {
 	d.spec1.Methods = []goopenrpcT.Method{}
 	mets := d.serverProvider.Methods()
 
-	for k, rvals := range mets {
-		if rvals == nil || len(rvals) == 0 {
-			fmt.Println("skip bad k", k)
-			continue
-		}
-
+	for k, cb := range mets {
 		if isDiscoverMethodBlacklisted(d.discoverOpts, k) {
 			continue
 		}
 
-		m, err := d.GetMethod(k, rvals)
+		m, err := d.GetMethod(k, cb)
 		if err != nil {
 			return nil, err
 		}
+
 		d.spec1.Methods = append(d.spec1.Methods, *m)
 	}
 	sort.Slice(d.spec1.Methods, func(i, j int) bool {
 		return d.spec1.Methods[i].Name < d.spec1.Methods[j].Name
 	})
 
-	if d.discoverOpts != nil && len(d.discoverOpts.SchemaMutations) > 0 {
-		for _, mutation := range d.discoverOpts.SchemaMutations {
-			d.documentRunSchemasMutation(mutation)
+	if d.discoverOpts != nil && len(d.discoverOpts.SchemaMutationFns) > 0 {
+		for _, mutation := range d.discoverOpts.SchemaMutationFns {
+			d.documentSchemaMutation(mutation)
 		}
 	}
 	//if d.discoverOpts != nil && !d.discoverOpts.Inline {
@@ -144,12 +167,12 @@ func (d *Document) Discover() (doc *goopenrpcT.OpenRPCSpec1, err error) {
 	return d.spec1, nil
 }
 
-func removeDefinitionsFieldSchemaMutation(s *spec.Schema) error {
+func SchemaMutationRemoveDefinitionsField(s *spec.Schema) error {
 	s.Definitions = nil
 	return nil
 }
 
-func expandSchemaMutation(s *spec.Schema) error {
+func SchemaMutationExpand(s *spec.Schema) error {
 	return spec.ExpandSchema(s, s, nil)
 }
 
@@ -180,17 +203,11 @@ func (d *Document) documentSchemaMutation(mut func(s *spec.Schema) error) {
 		d.spec1.Components.Schemas[k] = s
 	}
 }
-func (d *Document) documentRunSchemasMutation(id MutateType) {
-	switch id {
-	case SchemaMutateType_Expand:
-		d.documentSchemaMutation(expandSchemaMutation)
-	case SchemaMutateType_RemoveDefinitions:
-		d.documentSchemaMutation(removeDefinitionsFieldSchemaMutation)
-	}
-}
 
 func documentGetAstFunc(rcvr reflect.Value, fn reflect.Value, astFile *ast.File, rf *runtime.Func) *ast.FuncDecl {
-	rfName := runtimeFuncName(rf)
+	rfName := runtimeFuncBaseName(rf)
+	//rfName := rf.Name()
+	fmt.Printf("OK: %s , BAD: %s\n", rfName, rf.Name())
 	for _, decl := range astFile.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
 		if !ok {
@@ -226,34 +243,50 @@ func documentGetAstFunc(rcvr reflect.Value, fn reflect.Value, astFile *ast.File,
 	return nil
 }
 
-func (d *Document) GetMethod(name string, fns []reflect.Value) (*goopenrpcT.Method, error) {
-	var recvr reflect.Value
-	var fn reflect.Value
-
-	if len(fns) == 2 && fns[0].IsValid() && fns[1].IsValid() {
-		recvr, fn = fns[0], fns[1]
-	} else if len(fns) == 1 {
-		fn = fns[0]
+func (cb *Callback) Func() reflect.Value {
+	if cb.Receiver.IsValid() {
+		return cb.Fn
 	}
 
-	rtFunc := runtime.FuncForPC(fn.Pointer())
-	cbFile, _ := rtFunc.FileLine(rtFunc.Entry())
+	return cb.Receiver
+}
+
+func (cb *Callback) Rcvr() reflect.Value {
+	return cb.Receiver
+}
+
+
+
+func (d *Document) GetMethod(name string, cb Callback) (*goopenrpcT.Method, error) {
+	//var rcvrVal reflect.Value
+	//var fnVal reflect.Value
+	//
+	//if len(cb) == 2 && cb[0].IsValid() && cb[1].IsValid() {
+	//	rcvrVal, fnVal = cb[0], cb[1]
+	//} else if len(cb) == 1 {
+	//	fnVal = cb[0]
+	//}
+
+	rcvrVal, fnVal := cb.Rcvr(), cb.Func()
+
+	runtimeFunc := runtime.FuncForPC(fnVal.Pointer())
+	runtimeFile, _ := runtimeFunc.FileLine(runtimeFunc.Entry())
 
 	tokenFileSet := token.NewFileSet()
-	astFile, err := parser.ParseFile(tokenFileSet, cbFile, nil, parser.ParseComments)
+	astFile, err := parser.ParseFile(tokenFileSet, runtimeFile, nil, parser.ParseComments)
 	if err != nil {
 		return nil, err
 	}
 
-	astFuncDecl := documentGetAstFunc(recvr, fn, astFile, rtFunc)
+	astFuncDecl := documentGetAstFunc(rcvrVal, fnVal, astFile, runtimeFunc)
 
 	if astFuncDecl == nil {
 		return nil, fmt.Errorf("nil ast func: method name: %s", name)
 	}
 
-	method, err := d.documentMakeMethod(name, recvr, fn, rtFunc, astFuncDecl)
+	method, err := d.documentMakeMethod(name, rcvrVal, fnVal, runtimeFunc, astFuncDecl)
 	if err != nil {
-		return nil, fmt.Errorf("make method error method=%s cb=%s error=%v", name, spew.Sdump(fn), err)
+		return nil, fmt.Errorf("make method error method=%s cb=%s error=%v", name, spew.Sdump(fnVal), err)
 	}
 	return &method, nil
 }
@@ -285,9 +318,9 @@ func documentGetArgTypes(rcvr, val reflect.Value) (argTypes []reflect.Type) {
 	if rcvr.IsValid() && !rcvr.IsNil() {
 		firstArg++
 	}
-	if fntype.NumIn() > firstArg && fntype.In(firstArg) == contextType {
-		firstArg++
-	}
+	//if fntype.NumIn() > firstArg && fntype.In(firstArg) == contextType {
+	//	firstArg++
+	//}
 	// Add all remaining parameters.
 	argTypes = make([]reflect.Type, fntype.NumIn()-firstArg)
 	for i := firstArg; i < fntype.NumIn(); i++ {
@@ -426,7 +459,7 @@ func (d *Document) documentMakeMethod(name string, rcvr reflect.Value, cb reflec
 	return m, nil
 }
 
-func runtimeFuncName(rf *runtime.Func) string {
+func runtimeFuncBaseName(rf *runtime.Func) string {
 	spl := strings.Split(rf.Name(), ".")
 	return spl[len(spl)-1]
 }
@@ -480,7 +513,7 @@ func (d *Document) makeContentDescriptor(ty reflect.Type, field *ast.Field, iden
 
 	jsch := rflctr.ReflectFromType(ty)
 
-	// Poor man's type cast.
+	// Poor man's glue.
 	// Need to get the type from the go struct -> json reflector package
 	// to the swagger/go-openapi/jsonschema spec.
 	// Do this with JSON marshaling.

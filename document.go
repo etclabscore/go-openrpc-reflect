@@ -337,11 +337,11 @@ func (d *Document) documentMakeMethod(name string, rcvr reflect.Value, cb reflec
 	}
 
 	defer func() {
-		if m.Result.Name == "" {
-			m.Result.Name = "null"
-			m.Result.Schema.Type = []string{"null"}
-			m.Result.Schema.Description = "Null"
-		}
+		//if m.Result.Name == "" {
+		//	m.Result.Name = "null"
+		//	m.Result.Schema.Type = []string{"null"}
+		//	m.Result.Schema.Description = "Null"
+		//}
 	}()
 
 	argTypes := documentGetArgTypes(rcvr, cb)
@@ -440,6 +440,8 @@ func (d *Document) makeContentDescriptor(ty reflect.Type, field *ast.Field, iden
 			schemaType = fmt.Sprintf("%v", ty.Elem().Name())
 			schemaType = fmt.Sprintf("*%s:%s", ty.Elem().PkgPath(), schemaType)
 		}
+	default:
+
 		//ty = ty.Elem() // FIXME: wart warn
 	}
 	//schemaType = fmt.Sprintf("%s:%s", ty.PkgPath(), schemaType)

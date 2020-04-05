@@ -36,11 +36,14 @@ const (
 )
 
 type DocumentDiscoverOpts struct {
-	Inline          bool
-	SchemaMutations []MutateType
-	MethodBlackList []string
-	TypeMapper      func(r reflect.Type) *jsonschema.Type
-	IgnoredTypes    []interface{}
+	Inline            bool
+	SchemaMutations   []MutateType
+	SchemaMutationFns []func(s *spec.Schema) error
+	MethodBlackList   []string
+
+	// TypeMapper gets passed directly to the jsonschema reflection library.
+	TypeMapper        func(r reflect.Type) *jsonschema.Type
+	IgnoredTypes      []interface{}
 }
 
 type argIdent struct {
@@ -385,12 +388,18 @@ func (d *Document) documentMakeMethod(name string, rcvr reflect.Value, cb reflec
 	if fn.Type.Results != nil {
 		j := 0
 		for _, field := range fn.Type.Results.List {
+
+			// Always take the first return value. (Second would be an error typically).
+			if len(m.Result.Schema.Type) > 0 {
+				break
+			}
+
 			if field == nil {
 				continue
 			}
-			if strings.Contains(fmt.Sprintf("%s", field.Type), "error") {
-				continue
-			}
+			//if errorType == retTypes[j] || strings.Contains(fmt.Sprintf("%s", field.Type), "error") {
+			//	continue
+			//}
 			if len(field.Names) > 0 {
 				// This really should never ever happen I don't think.
 				// JSON-RPC returns _an_ result. So there can't be > 1 return value.
@@ -404,7 +413,7 @@ func (d *Document) documentMakeMethod(name string, rcvr reflect.Value, cb reflec
 					m.Result = &cd
 				}
 			} else {
-				cd, err := d.makeContentDescriptor(retTypes[j], field, argIdent{nil, fmt.Sprintf("%sResult", name)})
+				cd, err := d.makeContentDescriptor(retTypes[j], field, argIdent{nil, fmt.Sprintf("%s", retTypes[j].Name())})
 				if err != nil {
 					return m, err
 				}

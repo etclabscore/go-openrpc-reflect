@@ -1,0 +1,186 @@
+{
+  "openrpc": "1.2.4",
+  "info": {
+    "title": "My Standard Service",
+    "description": "Aaaaahh!",
+    "termsOfService": "https://github.com/etclabscore/openrpc-go-document/blob/master/LICENSE.md",
+    "contact": {
+      "name": "",
+      "url": "",
+      "email": ""
+    },
+    "license": {
+      "name": "",
+      "url": ""
+    },
+    "version": "v0.0.0-beta-2020-04-06T11:21:49-05:00-1586190109"
+  },
+  "servers": [],
+  "methods": [
+    {
+      "name": "Add",
+      "tags": [],
+      "summary": "",
+      "description": "`func(*openrpc_go_document.MyStandardService, openrpc_go_document.MyStandardAddRPCArg, *openrpc_go_document.MyStandardAddRPCReply) error`",
+      "externalDocs": {
+        "description": "line=89",
+        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+      },
+      "params": [
+        {
+          "name": "input",
+          "summary": "",
+          "description": "github.com/etclabscore/openrpc-go-document.MyStandardAddRPCArg",
+          "required": true,
+          "deprecated": false,
+          "schema": {
+            "$ref": "#/components/schemas/_string_69d99801"
+          }
+        }
+      ],
+      "result": {
+        "name": "response",
+        "summary": "",
+        "description": "github.com/etclabscore/openrpc-go-document.MyStandardAddRPCReply",
+        "required": true,
+        "deprecated": false,
+        "schema": {
+          "$ref": "#/components/schemas/_integer_1c982f14"
+        }
+      },
+      "deprecated": false,
+      "servers": [],
+      "errors": [],
+      "links": [],
+      "paramStructure": "by-position",
+      "examples": []
+    },
+    {
+      "name": "IsZeroNum",
+      "tags": [],
+      "summary": "",
+      "description": "`func(*openrpc_go_document.MyStandardService, openrpc_go_document.MyStandardIsZeroRPCArg, *openrpc_go_document.MyStandardIsZeroRPCReply) error`",
+      "externalDocs": {
+        "description": "line=107",
+        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+      },
+      "params": [
+        {
+          "name": "input",
+          "summary": "",
+          "description": "github.com/etclabscore/openrpc-go-document.MyStandardIsZeroRPCArg",
+          "required": true,
+          "deprecated": false,
+          "schema": {
+            "$ref": "#/components/schemas/_integer_57d015d1"
+          }
+        }
+      ],
+      "result": {
+        "name": "response",
+        "summary": "",
+        "description": "github.com/etclabscore/openrpc-go-document.MyStandardIsZeroRPCReply",
+        "required": true,
+        "deprecated": false,
+        "schema": {
+          "$ref": "#/components/schemas/_object_296eabcb"
+        }
+      },
+      "deprecated": false,
+      "servers": [],
+      "errors": [],
+      "links": [],
+      "paramStructure": "by-position",
+      "examples": []
+    },
+    {
+      "name": "RandomNum",
+      "tags": [],
+      "summary": "",
+      "description": "`func(*openrpc_go_document.MyStandardService, openrpc_go_document.MyStandardRandomRPCArg, *openrpc_go_document.MyStandardRandomRPCReply) error`",
+      "externalDocs": {
+        "description": "line=96",
+        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+      },
+      "params": [
+        {
+          "name": "noopString",
+          "summary": "",
+          "description": "github.com/etclabscore/openrpc-go-document.MyStandardRandomRPCArg",
+          "required": true,
+          "deprecated": false,
+          "schema": {
+            "$ref": "#/components/schemas/_string_5bd67a29"
+          }
+        }
+      ],
+      "result": {
+        "name": "response",
+        "summary": "",
+        "description": "github.com/etclabscore/openrpc-go-document.MyStandardRandomRPCReply",
+        "required": true,
+        "deprecated": false,
+        "schema": {
+          "$ref": "#/components/schemas/_integer_5430d700"
+        }
+      },
+      "deprecated": false,
+      "servers": [],
+      "errors": [],
+      "links": [],
+      "paramStructure": "by-position",
+      "examples": []
+    }
+  ],
+  "components": {
+    "schemas": {
+      "_boolean_420dffc4": {
+        "type": "boolean"
+      },
+      "_integer_1c982f14": {
+        "description": "github.com/etclabscore/openrpc-go-document.MyStandardAddRPCReply",
+        "type": "integer"
+      },
+      "_integer_5430d700": {
+        "description": "github.com/etclabscore/openrpc-go-document.MyStandardRandomRPCReply",
+        "type": "integer"
+      },
+      "_integer_57d015d1": {
+        "description": "github.com/etclabscore/openrpc-go-document.MyStandardIsZeroRPCArg",
+        "type": "integer"
+      },
+      "_object_296eabcb": {
+        "description": "github.com/etclabscore/openrpc-go-document.MyStandardIsZeroRPCReply",
+        "type": "object",
+        "required": [
+          "Explanation",
+          "Mansplaining"
+        ],
+        "properties": {
+          "Explanation": {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          "Mansplaining": {
+            "$ref": "#/components/schemas/_boolean_420dffc4"
+          }
+        },
+        "additionalProperties": false
+      },
+      "_string_5b1cd571": {
+        "type": "string"
+      },
+      "_string_5bd67a29": {
+        "description": "github.com/etclabscore/openrpc-go-document.MyStandardRandomRPCArg",
+        "type": "string"
+      },
+      "_string_69d99801": {
+        "description": "github.com/etclabscore/openrpc-go-document.MyStandardAddRPCArg",
+        "type": "string"
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "GPLv3",
+    "url": "https://github.com/golang/go/blob/LICENSE.md"
+  }
+}

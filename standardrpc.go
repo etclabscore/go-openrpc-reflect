@@ -5,9 +5,25 @@ import (
 	"log"
 	"reflect"
 	"sync"
+
+	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
 
-func DefaultSuitableCallbacksGoRPC(service interface{}) func() map[string]Callback {
+func DefaultStandardRPCServiceProvider(wrapped interface{}) *ServerProviderService {
+	return &ServerProviderService{
+		ServiceCallbacks:        DefaultServiceCallbacksStandard(wrapped),
+		ServiceCallbackToMethod: DefaultServiceCallbackToMethodStandard,
+		ServiceOpenRPCInfo:      func() goopenrpcT.Info { return goopenrpcT.Info{} },
+		ServiceOpenRPCExternalDocs: func() *goopenrpcT.ExternalDocs {
+			return &goopenrpcT.ExternalDocs{
+				Description: "GPLv3",
+				URL:         "https://github.com/golang/go/blob/LICENSE.md",
+			}
+		},
+	}
+}
+
+func DefaultServiceCallbacksStandard(service interface{}) func() map[string]Callback {
 	return func() map[string]Callback {
 		ty := reflect.TypeOf(service)
 		v := reflect.ValueOf(service)

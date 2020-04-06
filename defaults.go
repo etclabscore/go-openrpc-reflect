@@ -1,11 +1,9 @@
 package openrpc_go_document
 
 import (
-	"fmt"
 	"go/ast"
 	"reflect"
 	"regexp"
-	"unicode"
 
 	"github.com/go-openapi/spec"
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
@@ -31,7 +29,7 @@ var nullContentDescriptor = &goopenrpcT.ContentDescriptor{
 		Name: "Null",
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Type: []string{"Null"},
+				Type: []string{"null"},
 			},
 		},
 	},
@@ -61,6 +59,24 @@ func NewSpec() *goopenrpcT.OpenRPCSpec1 {
 	}
 }
 
+func newMethod() *goopenrpcT.Method {
+	return &goopenrpcT.Method{
+		Name:           "REQUIRED",
+		Tags:           []goopenrpcT.Tag{},
+		Summary:        "",
+		Description:    "",
+		ExternalDocs:   goopenrpcT.ExternalDocs{},
+		Params:         nil, // Required to set, leave nil.
+		Result:         nil, // Required to set, leave nil.
+		Deprecated:     false,
+		Servers:        []goopenrpcT.Server{},
+		Errors:         []goopenrpcT.Error{},
+		Links:          []goopenrpcT.Link{},
+		ParamStructure: "by-position",
+		Examples:       []goopenrpcT.ExamplePairing{},
+	}
+}
+
 func SchemaMutationRemoveDefinitionsField(s *spec.Schema) error {
 	s.Definitions = nil
 	return nil
@@ -80,102 +96,102 @@ func SchemaMutationRequireDefaultOn(s *spec.Schema) error {
 	}
 	return nil
 }
-
-// GoRPCServiceMethods gets the methods available following the standard rpc library
-// pattern. Receiver type names are joined to method type names by a dot.
-func GoRPCServiceMethods(service interface{}) func() map[string]Callback {
-	return func() map[string]Callback {
-
-		result := make(map[string]Callback)
-
-		rcvr := reflect.ValueOf(service)
-		fmt.Println("rcvr val", rcvr)
-
-		for n := 0; n < rcvr.NumMethod(); n++ {
-			m := reflect.TypeOf(service).Method(n)
-			methodName := rcvr.Elem().Type().Name() + "." + m.Name
-			result[methodName] = Callback{reflect.ValueOf(service), m.Func}
-		}
-		return result
-	}
-}
 //
-//func GoEthereumSuitableCallbacks(receiver reflect.Value) map[string]Callback {
-//	typ := receiver.Type()
-//	callbacks := make(map[string]Callback)
-//	for m := 0; m < typ.NumMethod(); m++ {
-//		method := typ.Method(m)
-//		if method.PkgPath != "" {
-//			continue // method not exported
-//		}
-//		cb := newCallback(receiver, method.Func)
-//		if cb == nil {
-//			continue // function invalid
-//		}
-//		name := formatName(method.Name)
-//		callbacks[name] = cb
+////// GoRPCServiceMethods gets the methods available following the standard rpc library
+////// pattern. Receiver type names are joined to method type names by a dot.
+////func GoRPCServiceMethods(service interface{}) func() map[string]Callback {
+////	return func() map[string]Callback {
+////
+////		result := make(map[string]Callback)
+////
+////		rcvr := reflect.ValueOf(service)
+////		fmt.Println("rcvr val", rcvr)
+////
+////		for n := 0; n < rcvr.NumMethod(); n++ {
+////			m := reflect.TypeOf(service).Method(n)
+////			methodName := rcvr.Elem().Type().Name() + "." + m.Name
+////			result[methodName] = Callback{reflect.ValueOf(service), m.Func}
+////		}
+////		return result
+////	}
+////}
+////
+////func GoEthereumSuitableCallbacks(receiver reflect.Value) map[string]Callback {
+////	typ := receiver.Type()
+////	callbacks := make(map[string]Callback)
+////	for m := 0; m < typ.NumMethod(); m++ {
+////		method := typ.Method(m)
+////		if method.PkgPath != "" {
+////			continue // method not exported
+////		}
+////		cb := newCallback(receiver, method.Func)
+////		if cb == nil {
+////			continue // function invalid
+////		}
+////		name := formatName(method.Name)
+////		callbacks[name] = cb
+////	}
+////	return callbacks
+////}
+//
+//// newCallback turns fn (a function) into a ethereumCallback object. It returns nil if the function
+//// is unsuitable as an RPC ethereumCallback.
+//func newCallback(receiver, fn reflect.Value) *ethereumCallback {
+//	fntype := fn.Type()
+//	c := &ethereumCallback{fn: fn, rcvr: receiver, errPos: -1, isSubscribe: isPubSub(fntype)}
+//	// Determine parameter types. They must all be exported or builtin types.
+//	c.makeArgTypes()
+//
+//	// Verify return types. The function must return at most one error
+//	// and/or one other non-error value.
+//	outs := make([]reflect.Type, fntype.NumOut())
+//	for i := 0; i < fntype.NumOut(); i++ {
+//		outs[i] = fntype.Out(i)
 //	}
-//	return callbacks
+//	if len(outs) > 2 {
+//		return nil
+//	}
+//	// If an error is returned, it must be the last returned value.
+//	switch {
+//	case len(outs) == 1 && isErrorType(outs[0]):
+//		c.errPos = 0
+//	case len(outs) == 2:
+//		if isErrorType(outs[0]) || !isErrorType(outs[1]) {
+//			return nil
+//		}
+//		c.errPos = 1
+//	}
+//	return c
 //}
-
-// newCallback turns fn (a function) into a ethereumCallback object. It returns nil if the function
-// is unsuitable as an RPC ethereumCallback.
-func newCallback(receiver, fn reflect.Value) *ethereumCallback {
-	fntype := fn.Type()
-	c := &ethereumCallback{fn: fn, rcvr: receiver, errPos: -1, isSubscribe: isPubSub(fntype)}
-	// Determine parameter types. They must all be exported or builtin types.
-	c.makeArgTypes()
-
-	// Verify return types. The function must return at most one error
-	// and/or one other non-error value.
-	outs := make([]reflect.Type, fntype.NumOut())
-	for i := 0; i < fntype.NumOut(); i++ {
-		outs[i] = fntype.Out(i)
-	}
-	if len(outs) > 2 {
-		return nil
-	}
-	// If an error is returned, it must be the last returned value.
-	switch {
-	case len(outs) == 1 && isErrorType(outs[0]):
-		c.errPos = 0
-	case len(outs) == 2:
-		if isErrorType(outs[0]) || !isErrorType(outs[1]) {
-			return nil
-		}
-		c.errPos = 1
-	}
-	return c
-}
-
-// formatName converts to first character of name to lowercase.
-func formatName(name string) string {
-	ret := []rune(name)
-	if len(ret) > 0 {
-		ret[0] = unicode.ToLower(ret[0])
-	}
-	return string(ret)
-}
-
-
-func defaultContentDescriptorSkip(isArgs bool, index int, cd *goopenrpcT.ContentDescriptor) bool {
-	if isArgs {
-		if cd.Schema.Description == "context.Context" {
-			return true
-		}
-	}
-	return false
-}
-
-func documentValHasContext(rcvr reflect.Value, val reflect.Value) bool {
-	fntype := val.Type()
-	// Skip receiver and context.Context parameter (if present).
-	firstArg := 0
-	if rcvr.IsValid() && !rcvr.IsNil() {
-		firstArg++
-	}
-	return fntype.NumIn() > firstArg && fntype.In(firstArg) == contextType
-}
+//
+//// formatName converts to first character of name to lowercase.
+//func formatName(name string) string {
+//	ret := []rune(name)
+//	if len(ret) > 0 {
+//		ret[0] = unicode.ToLower(ret[0])
+//	}
+//	return string(ret)
+//}
+//
+//
+//func defaultContentDescriptorSkip(isArgs bool, index int, cd *goopenrpcT.ContentDescriptor) bool {
+//	if isArgs {
+//		if cd.Schema.Description == "context.Context" {
+//			return true
+//		}
+//	}
+//	return false
+//}
+//
+//func documentValHasContext(rcvr reflect.Value, val reflect.Value) bool {
+//	fntype := val.Type()
+//	// Skip receiver and context.Context parameter (if present).
+//	firstArg := 0
+//	if rcvr.IsValid() && !rcvr.IsNil() {
+//		firstArg++
+//	}
+//	return fntype.NumIn() > firstArg && fntype.In(firstArg) == contextType
+//}
 
 /*
 	These following functions summary, description, etc.

@@ -1,0 +1,191 @@
+{
+  "openrpc": "1.2.4",
+  "info": {
+    "title": "My Ethereum Service",
+    "description": "Oooohhh!",
+    "termsOfService": "https://github.com/etclabscore/openrpc-go-document/blob/master/LICENSE.md",
+    "contact": {
+      "name": "",
+      "url": "",
+      "email": ""
+    },
+    "license": {
+      "name": "",
+      "url": ""
+    },
+    "version": "v0.0.0-beta-2020-04-06T11:21:49-05:00-1586190109"
+  },
+  "servers": [],
+  "methods": [
+    {
+      "name": "do",
+      "tags": [],
+      "summary": "Do is a very sparse mock method.\n",
+      "description": "`func(*openrpc_go_document.MyEthereumService, string)`",
+      "externalDocs": {
+        "description": "line=51",
+        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+      },
+      "params": [
+        {
+          "name": "string",
+          "summary": "",
+          "description": "string",
+          "required": true,
+          "deprecated": false,
+          "schema": {
+            "$ref": "#/components/schemas/_string_5116c2a2"
+          }
+        }
+      ],
+      "result": {
+        "name": "Null",
+        "summary": "",
+        "description": "",
+        "required": false,
+        "deprecated": false,
+        "schema": {
+          "$ref": "#/components/schemas/_null_c61c2295"
+        }
+      },
+      "deprecated": false,
+      "servers": [],
+      "errors": [],
+      "links": [],
+      "paramStructure": "by-position",
+      "examples": []
+    },
+    {
+      "name": "fetch",
+      "tags": [],
+      "summary": "Fetch is a mock method.\n",
+      "description": "`func(*openrpc_go_document.MyEthereumService) (*openrpc_go_document.MyVal, error)`",
+      "externalDocs": {
+        "description": "line=44",
+        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+      },
+      "params": [],
+      "result": {
+        "name": "result",
+        "summary": "",
+        "description": "github.com/etclabscore/openrpc-go-document.MyVal",
+        "required": true,
+        "deprecated": false,
+        "schema": {
+          "$ref": "#/components/schemas/_object_d4087fc4"
+        }
+      },
+      "deprecated": false,
+      "servers": [],
+      "errors": [],
+      "links": [],
+      "paramStructure": "by-position",
+      "examples": []
+    },
+    {
+      "name": "make",
+      "tags": [],
+      "summary": "Make is a busy method with lots of comments.\nMore notes. Is Deprecated.\n",
+      "description": "`func(*openrpc_go_document.MyEthereumService, context.Context, string, *big.Int) (openrpc_go_document.MyVal, error)`",
+      "externalDocs": {
+        "description": "line=55",
+        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+      },
+      "params": [
+        {
+          "name": "name",
+          "summary": "",
+          "description": "string",
+          "required": true,
+          "deprecated": false,
+          "schema": {
+            "$ref": "#/components/schemas/_string_5116c2a2"
+          }
+        },
+        {
+          "name": "cellsN",
+          "summary": "",
+          "description": "math/big.Int",
+          "required": true,
+          "deprecated": false,
+          "schema": {
+            "$ref": "#/components/schemas/_object_88b0fee6"
+          }
+        }
+      ],
+      "result": {
+        "name": "myResult",
+        "summary": "",
+        "description": "github.com/etclabscore/openrpc-go-document.MyVal",
+        "required": true,
+        "deprecated": false,
+        "schema": {
+          "$ref": "#/components/schemas/_object_d4087fc4"
+        }
+      },
+      "deprecated": true,
+      "servers": [],
+      "errors": [],
+      "links": [],
+      "paramStructure": "by-position",
+      "examples": []
+    }
+  ],
+  "components": {
+    "schemas": {
+      "_boolean_420dffc4": {
+        "type": "boolean"
+      },
+      "_integer_4df23f6f": {
+        "type": "integer"
+      },
+      "_null_c61c2295": {
+        "type": "null"
+      },
+      "_object_88b0fee6": {
+        "description": "math/big.Int",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "_object_d4087fc4": {
+        "description": "github.com/etclabscore/openrpc-go-document.MyVal",
+        "type": "object",
+        "required": [
+          "Name",
+          "oldness",
+          "CellN"
+        ],
+        "properties": {
+          "CellN": {
+            "$ref": "#/components/schemas/_object_d9873742"
+          },
+          "Exists": {
+            "$ref": "#/components/schemas/_boolean_420dffc4"
+          },
+          "Name": {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          "oldness": {
+            "$ref": "#/components/schemas/_integer_4df23f6f"
+          }
+        },
+        "additionalProperties": false
+      },
+      "_object_d9873742": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "_string_5116c2a2": {
+        "description": "string",
+        "type": "string"
+      },
+      "_string_5b1cd571": {
+        "type": "string"
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "GPLv3",
+    "url": "https://github.com/ethereum/go-ethereum/blob/COPYING.md"
+  }
+}

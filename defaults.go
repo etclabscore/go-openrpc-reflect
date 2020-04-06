@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"reflect"
 	"regexp"
+	"unicode"
 
 	"github.com/alecthomas/jsonschema"
 	"github.com/go-openapi/spec"
@@ -102,6 +103,64 @@ func GoRPCServiceMethods(service interface{}) func() map[string]Callback {
 		return result
 	}
 }
+
+func GoEthereumSuitableCallbacks(receiver reflect.Value) map[string]Callback {
+	typ := receiver.Type()
+	callbacks := make(map[string]Callback)
+	for m := 0; m < typ.NumMethod(); m++ {
+		method := typ.Method(m)
+		if method.PkgPath != "" {
+			continue // method not exported
+		}
+		cb := newCallback(receiver, method.Func)
+		if cb == nil {
+			continue // function invalid
+		}
+		name := formatName(method.Name)
+		callbacks[name] = cb
+	}
+	return callbacks
+}
+
+// newCallback turns fn (a function) into a callback object. It returns nil if the function
+// is unsuitable as an RPC callback.
+func newCallback(receiver, fn reflect.Value) *callback {
+	fntype := fn.Type()
+	c := &callback{fn: fn, rcvr: receiver, errPos: -1, isSubscribe: isPubSub(fntype)}
+	// Determine parameter types. They must all be exported or builtin types.
+	c.makeArgTypes()
+
+	// Verify return types. The function must return at most one error
+	// and/or one other non-error value.
+	outs := make([]reflect.Type, fntype.NumOut())
+	for i := 0; i < fntype.NumOut(); i++ {
+		outs[i] = fntype.Out(i)
+	}
+	if len(outs) > 2 {
+		return nil
+	}
+	// If an error is returned, it must be the last returned value.
+	switch {
+	case len(outs) == 1 && isErrorType(outs[0]):
+		c.errPos = 0
+	case len(outs) == 2:
+		if isErrorType(outs[0]) || !isErrorType(outs[1]) {
+			return nil
+		}
+		c.errPos = 1
+	}
+	return c
+}
+
+// formatName converts to first character of name to lowercase.
+func formatName(name string) string {
+	ret := []rune(name)
+	if len(ret) > 0 {
+		ret[0] = unicode.ToLower(ret[0])
+	}
+	return string(ret)
+}
+
 
 func defaultContentDescriptorSkip(isArgs bool, index int, cd *goopenrpcT.ContentDescriptor) bool {
 	if isArgs {

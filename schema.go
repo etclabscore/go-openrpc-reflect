@@ -61,8 +61,7 @@ func (d *Document) typeToSchema(ty reflect.Type) spec.Schema {
 }
 
 func fullTypeDescription(ty reflect.Type) string {
-	v := reflect.ValueOf(ty)
-	if v.IsValid() && v.CanAddr() {
+	if ty.Kind() == reflect.Ptr {
 		ty = ty.Elem()
 	}
 

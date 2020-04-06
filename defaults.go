@@ -122,11 +122,11 @@ func GoEthereumSuitableCallbacks(receiver reflect.Value) map[string]Callback {
 	return callbacks
 }
 
-// newCallback turns fn (a function) into a callback object. It returns nil if the function
-// is unsuitable as an RPC callback.
-func newCallback(receiver, fn reflect.Value) *callback {
+// newCallback turns fn (a function) into a ethereumCallback object. It returns nil if the function
+// is unsuitable as an RPC ethereumCallback.
+func newCallback(receiver, fn reflect.Value) *ethereumCallback {
 	fntype := fn.Type()
-	c := &callback{fn: fn, rcvr: receiver, errPos: -1, isSubscribe: isPubSub(fntype)}
+	c := &ethereumCallback{fn: fn, rcvr: receiver, errPos: -1, isSubscribe: isPubSub(fntype)}
 	// Determine parameter types. They must all be exported or builtin types.
 	c.makeArgTypes()
 

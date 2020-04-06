@@ -48,6 +48,19 @@ func (cb *Callback) HasReceiver() bool {
 	return false
 }
 
+func (cb *Callback) HasContext() bool {
+	fntype := cb.Func().Type()
+	// Skip receiver and context.Context parameter (if present).
+	firstArg := 0
+	if cb.HasReceiver() {
+		firstArg++
+	}
+	if fntype.NumIn() > firstArg && fntype.In(firstArg) == contextType {
+		return true
+	}
+	return false
+}
+
 func (cb *Callback) getArgTypes() (argTypes []reflect.Type) {
 	fntype := cb.Func().Type()
 

@@ -103,24 +103,24 @@ func GoRPCServiceMethods(service interface{}) func() map[string]Callback {
 		return result
 	}
 }
-
-func GoEthereumSuitableCallbacks(receiver reflect.Value) map[string]Callback {
-	typ := receiver.Type()
-	callbacks := make(map[string]Callback)
-	for m := 0; m < typ.NumMethod(); m++ {
-		method := typ.Method(m)
-		if method.PkgPath != "" {
-			continue // method not exported
-		}
-		cb := newCallback(receiver, method.Func)
-		if cb == nil {
-			continue // function invalid
-		}
-		name := formatName(method.Name)
-		callbacks[name] = cb
-	}
-	return callbacks
-}
+//
+//func GoEthereumSuitableCallbacks(receiver reflect.Value) map[string]Callback {
+//	typ := receiver.Type()
+//	callbacks := make(map[string]Callback)
+//	for m := 0; m < typ.NumMethod(); m++ {
+//		method := typ.Method(m)
+//		if method.PkgPath != "" {
+//			continue // method not exported
+//		}
+//		cb := newCallback(receiver, method.Func)
+//		if cb == nil {
+//			continue // function invalid
+//		}
+//		name := formatName(method.Name)
+//		callbacks[name] = cb
+//	}
+//	return callbacks
+//}
 
 // newCallback turns fn (a function) into a ethereumCallback object. It returns nil if the function
 // is unsuitable as an RPC ethereumCallback.

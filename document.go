@@ -15,7 +15,6 @@ import (
 	"github.com/alecthomas/jsonschema"
 	"github.com/davecgh/go-spew/spew"
 	jst "github.com/etclabscore/go-jsonschema-traverse"
-	"github.com/etclabscore/openrpc-go-document/defaults"
 	"github.com/go-openapi/jsonreference"
 	"github.com/go-openapi/spec"
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
@@ -91,7 +90,7 @@ func (d *Document) Discover() (err error) {
 	d.spec1.Methods = []goopenrpcT.Method{}
 
 	for k, cb := range callbacks {
-		if defaults.isDiscoverMethodBlacklisted(d.discoverOpts, k) {
+		if isDiscoverMethodBlacklisted(d.discoverOpts, k) {
 			continue
 		}
 
@@ -307,7 +306,7 @@ func (d *Document) makeMethod(name string, pcb *parsedCallback) (*goopenrpcT.Met
 			out = append(out, cd)
 		}
 		if len(out) == 0 {
-			out = append(out, defaults.nullContentDescriptor)
+			out = append(out, nullContentDescriptor)
 		}
 		return out, nil
 	}
@@ -326,7 +325,7 @@ func (d *Document) makeMethod(name string, pcb *parsedCallback) (*goopenrpcT.Met
 	return &goopenrpcT.Method{
 		Name:        name, // pcb.runtimeF.Name(), // FIXME or give me a comment.
 		Tags:        nil,
-		Summary:     defaults.methodSummary(pcb.fdecl),
+		Summary:     methodSummary(pcb.fdecl),
 		Description: description(),
 		ExternalDocs: goopenrpcT.ExternalDocs{
 			Description: fmt.Sprintf("line=%d", runtimeLine),
@@ -334,7 +333,7 @@ func (d *Document) makeMethod(name string, pcb *parsedCallback) (*goopenrpcT.Met
 		},
 		Params:         collectedParams,
 		Result:         res,
-		Deprecated:     defaults.methodDeprecated(pcb.fdecl),
+		Deprecated:     methodDeprecated(pcb.fdecl),
 		Servers:        nil,
 		Errors:         nil,
 		Links:          nil,

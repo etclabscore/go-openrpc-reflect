@@ -9,7 +9,6 @@ require (
 	github.com/go-openapi/jsonreference v0.19.3
 	github.com/go-openapi/spec v0.19.7
 	github.com/gregdhill/go-openrpc v0.0.1
-	golang.org/x/tools v0.0.0-20190628153133-6cdbf07be9d0
 )
 
 replace github.com/alecthomas/jsonschema => github.com/meowsbits/jsonschema v0.0.2

@@ -105,12 +105,12 @@ func TestDocument_Discover(t *testing.T) {
 	callbacksFn := func() map[string]Callback {
 		return callbacks
 	}
-	doc := DocumentProvider(&ServerProvider{
-		Callbacks: callbacksFn,
-		OpenRPCInfo: func() types.Info {
+	doc := DocumentProvider(&ServerProviderService{
+		ServiceCallbacks: callbacksFn,
+		ServiceOpenRPCInfo: func() types.Info {
 			return types.Info{}
 		},
-		OpenRPCExternalDocs: func() types.ExternalDocs {
+		ServiceOpenRPCExternalDocs: func() types.ExternalDocs {
 			return types.ExternalDocs{}
 		},
 	}, &DocumentProviderParseOpts{

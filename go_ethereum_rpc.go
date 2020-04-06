@@ -49,6 +49,11 @@ func (e *ethereumCallback) Callback() *Callback {
 	}
 }
 
+// DefaultSuitableCallbacksEthereum provides a set of ethereum/go-ethereum/rpc default callbacks.
+// This function and associated function duplicate that library's business logic in order
+// to pass openrpc-ready names and methods to the openrpc document library.
+//
+// 
 func DefaultSuitableCallbacksEthereum(service interface{}) func() map[string]Callback {
 	return func() map[string]Callback{
 		v := reflect.ValueOf(service)

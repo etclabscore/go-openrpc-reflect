@@ -10,7 +10,7 @@ import (
 	"github.com/go-openapi/spec"
 )
 
-func (d *Document) typeToSchema(ty reflect.Type) spec.Schema {
+func typeToSchema(opts *DocumentProviderParseOpts, ty reflect.Type) spec.Schema {
 	if !jsonschemaPkgSupport(ty) {
 		panic("FIXME")
 	}
@@ -19,8 +19,8 @@ func (d *Document) typeToSchema(ty reflect.Type) spec.Schema {
 		AllowAdditionalProperties:  false,
 		RequiredFromJSONSchemaTags: true,
 		ExpandedStruct:             false,
-		IgnoredTypes:               d.discoverOpts.SchemaIgnoredTypes,
-		TypeMapper:                 d.discoverOpts.TypeMapper,
+		IgnoredTypes:               opts.SchemaIgnoredTypes,
+		TypeMapper:                 opts.TypeMapper,
 	}
 
 	jsch := rflctr.ReflectFromType(ty)

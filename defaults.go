@@ -7,10 +7,24 @@ import (
 	"regexp"
 	"unicode"
 
-	"github.com/alecthomas/jsonschema"
 	"github.com/go-openapi/spec"
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
+
+func DefaultParseOptions() *DocumentProviderParseOpts {
+	return &DocumentProviderParseOpts{
+		SchemaMutationFns: []func(*spec.Schema) error{
+			SchemaMutationRequireDefaultOn,
+			SchemaMutationExpand,
+			SchemaMutationRemoveDefinitionsField,
+		},
+		ContentDescriptorMutationFns: nil,
+		MethodBlackList:              nil,
+		TypeMapper:                   nil,
+		SchemaIgnoredTypes:           nil,
+		ContentDescriptorSkipFn:      nil,
+	}
+}
 
 var nullContentDescriptor = &goopenrpcT.ContentDescriptor{
 	Content: goopenrpcT.Content{
@@ -45,24 +59,6 @@ func NewSpec() *goopenrpcT.OpenRPCSpec1 {
 		ExternalDocs: goopenrpcT.ExternalDocs{},
 		Objects:      goopenrpcT.NewObjectMap(),
 	}
-}
-
-var DefaultDocumentProviderParseOpts = &DocumentProviderParseOpts{
-	SchemaMutationFns:            []func(s *spec.Schema) error{
-		SchemaMutationRequireDefaultOn,
-		SchemaMutationExpand,
-		SchemaMutationRemoveDefinitionsField,
-	},
-	ContentDescriptorMutationFns: nil,
-	MethodBlackList:              nil,
-	TypeMapper: func(r reflect.Type) *jsonschema.Type {
-		switch r.Kind() {
-		case reflect.String:
-		}
-		return nil
-	},
-	SchemaIgnoredTypes:      nil,
-	ContentDescriptorSkipFn: nil,
 }
 
 func SchemaMutationRemoveDefinitionsField(s *spec.Schema) error {

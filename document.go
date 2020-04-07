@@ -47,14 +47,14 @@ type ServiceProvider interface {
 // functions for the document parses to get the information it needs
 // to make a complete OpenRPC-schema document.
 type ServerProviderService struct {
-	ServiceCallbacks           func() map[string]Callback
-	ServiceCallbackToMethod    func(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
-	ServiceOpenRPCInfo         func() goopenrpcT.Info
-	ServiceOpenRPCExternalDocs func() *goopenrpcT.ExternalDocs
+	ServiceCallbacksFromReceiver func() map[string]Callback
+	ServiceCallbackToMethod      func(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
+	ServiceOpenRPCInfo           func() goopenrpcT.Info
+	ServiceOpenRPCExternalDocs   func() *goopenrpcT.ExternalDocs
 }
 
 func (s *ServerProviderService) Callbacks() map[string]Callback {
-	return s.ServiceCallbacks()
+	return s.ServiceCallbacksFromReceiver()
 }
 
 func (s *ServerProviderService) CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error) {

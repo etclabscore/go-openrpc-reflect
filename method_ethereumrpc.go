@@ -12,9 +12,9 @@ import (
 
 func DefaultEthereumServiceProvider(wrapped interface{}) *ServerProviderService {
 	return &ServerProviderService{
-		ServiceCallbacks:        DefaultServiceCallbacksEthereum(wrapped),
-		ServiceCallbackToMethod: DefaultServiceCallbackToMethodEthereum,
-		ServiceOpenRPCInfo:      func() goopenrpcT.Info { return goopenrpcT.Info{} },
+		ServiceCallbacksFromReceiver: DefaultServiceCallbacksEthereum(wrapped),
+		ServiceCallbackToMethod:      DefaultServiceCallbackToMethodEthereum,
+		ServiceOpenRPCInfo:           func() goopenrpcT.Info { return goopenrpcT.Info{} },
 		ServiceOpenRPCExternalDocs: func() *goopenrpcT.ExternalDocs{
 			return &goopenrpcT.ExternalDocs{
 				Description: "GPLv3",

@@ -11,9 +11,9 @@ import (
 
 func DefaultStandardRPCServiceProvider(wrapped interface{}) *ServerProviderService {
 	return &ServerProviderService{
-		ServiceCallbacks:        DefaultServiceCallbacksStandard(wrapped),
-		ServiceCallbackToMethod: DefaultServiceCallbackToMethodStandard,
-		ServiceOpenRPCInfo:      func() goopenrpcT.Info { return goopenrpcT.Info{} },
+		ServiceCallbacksFromReceiver: DefaultServiceCallbacksStandard(wrapped),
+		ServiceCallbackToMethod:      DefaultServiceCallbackToMethodStandard,
+		ServiceOpenRPCInfo:           func() goopenrpcT.Info { return goopenrpcT.Info{} },
 		ServiceOpenRPCExternalDocs: func() *goopenrpcT.ExternalDocs {
 			return &goopenrpcT.ExternalDocs{
 				Description: "GPLv3",

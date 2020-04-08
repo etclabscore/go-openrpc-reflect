@@ -13,7 +13,7 @@
       "name": "",
       "url": ""
     },
-    "version": "v0.0.0-beta-2020-04-08T05:32:48-05:00-1586341968"
+    "version": "v0.0.0-beta-2020-04-08T08:04:48-05:00-1586351088"
   },
   "servers": [],
   "methods": [
@@ -45,7 +45,7 @@
         "required": true,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/__4e75b0c0"
+          "$ref": "#/components/schemas/__0deac778"
         }
       },
       "deprecated": false,
@@ -83,7 +83,7 @@
         "required": true,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/__d5a1d541"
+          "$ref": "#/components/schemas/__2f4500a9"
         }
       },
       "deprecated": false,
@@ -110,7 +110,7 @@
           "required": true,
           "deprecated": false,
           "schema": {
-            "$ref": "#/components/schemas/__58c9255f"
+            "$ref": "#/components/schemas/__7336580d"
           }
         }
       ],
@@ -121,7 +121,7 @@
         "required": true,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/__7ea48093"
+          "$ref": "#/components/schemas/__55c20593"
         }
       },
       "deprecated": false,
@@ -159,7 +159,7 @@
         "required": true,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/__888a0312"
+          "$ref": "#/components/schemas/__f6df146d"
         }
       },
       "deprecated": false,
@@ -197,7 +197,7 @@
         "required": true,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/__1c0685b9"
+          "$ref": "#/components/schemas/__819916f8"
         }
       },
       "deprecated": false,
@@ -210,11 +210,46 @@
   ],
   "components": {
     "schemas": {
-      "__1c0685b9": {
-        "description": "*float64",
+      "__0deac778": {
         "oneOf": [
           {
+            "$ref": "#/components/schemas/_array_b48af085"
+          },
+          {
+            "$ref": "#/components/schemas/_null_c61c2295"
+          }
+        ]
+      },
+      "__235ee471": {
+        "description": "github.com/etclabscore/openrpc-go-document.*SetReply",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/_array_7c658fd1"
+          },
+          {
+            "$ref": "#/components/schemas/_object_fe90370d"
+          },
+          {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          {
             "$ref": "#/components/schemas/_number_caa7697b"
+          },
+          {
+            "$ref": "#/components/schemas/_integer_4df23f6f"
+          },
+          {
+            "$ref": "#/components/schemas/_boolean_420dffc4"
+          },
+          {
+            "$ref": "#/components/schemas/_null_c61c2295"
+          }
+        ]
+      },
+      "__2f4500a9": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/_string_9bb5f291"
           },
           {
             "$ref": "#/components/schemas/_null_c61c2295"
@@ -246,19 +281,17 @@
           }
         ]
       },
-      "__4e75b0c0": {
-        "description": "github.com/etclabscore/openrpc-go-document.*GetAllReply",
+      "__55c20593": {
         "oneOf": [
           {
-            "$ref": "#/components/schemas/_array_2ed05e8f"
+            "$ref": "#/components/schemas/__9c27c3e7"
           },
           {
             "$ref": "#/components/schemas/_null_c61c2295"
           }
         ]
       },
-      "__58c9255f": {
-        "description": "github.com/gregdhill/go-openrpc/types.*ExamplePairing",
+      "__7336580d": {
         "oneOf": [
           {
             "$ref": "#/components/schemas/_object_7c7fcb99"
@@ -268,22 +301,36 @@
           }
         ]
       },
-      "__7ea48093": {
-        "description": "github.com/etclabscore/openrpc-go-document.*OperateOnExternalTypeReply",
+      "__819916f8": {
         "oneOf": [
           {
-            "$ref": "#/components/schemas/__3f7be866"
+            "$ref": "#/components/schemas/_number_6b9c7daf"
           },
           {
             "$ref": "#/components/schemas/_null_c61c2295"
           }
         ]
       },
-      "__888a0312": {
-        "description": "github.com/etclabscore/openrpc-go-document.*SetReply",
+      "__9c27c3e7": {
+        "description": "github.com/etclabscore/openrpc-go-document.*OperateOnExternalTypeReply",
         "oneOf": [
           {
-            "$ref": "#/components/schemas/__3f7be866"
+            "$ref": "#/components/schemas/_array_7c658fd1"
+          },
+          {
+            "$ref": "#/components/schemas/_object_fe90370d"
+          },
+          {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          {
+            "$ref": "#/components/schemas/_number_caa7697b"
+          },
+          {
+            "$ref": "#/components/schemas/_integer_4df23f6f"
+          },
+          {
+            "$ref": "#/components/schemas/_boolean_420dffc4"
           },
           {
             "$ref": "#/components/schemas/_null_c61c2295"
@@ -316,22 +363,15 @@
           }
         ]
       },
-      "__d5a1d541": {
-        "description": "github.com/etclabscore/openrpc-go-document.*GetDisguisedNameReply",
+      "__f6df146d": {
         "oneOf": [
           {
-            "$ref": "#/components/schemas/_string_5b1cd571"
+            "$ref": "#/components/schemas/__235ee471"
           },
           {
             "$ref": "#/components/schemas/_null_c61c2295"
           }
         ]
-      },
-      "_array_2ed05e8f": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/_object_89615155"
-        }
       },
       "_array_39b66d3a": {
         "type": "array",
@@ -341,6 +381,13 @@
       },
       "_array_7c658fd1": {
         "type": "array"
+      },
+      "_array_b48af085": {
+        "description": "github.com/etclabscore/openrpc-go-document.*GetAllReply",
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/_object_89615155"
+        }
       },
       "_boolean_420dffc4": {
         "type": "boolean"
@@ -354,6 +401,10 @@
       },
       "_null_c61c2295": {
         "type": "null"
+      },
+      "_number_6b9c7daf": {
+        "description": "*float64",
+        "type": "number"
       },
       "_number_caa7697b": {
         "type": "number"
@@ -435,6 +486,10 @@
         "type": "string"
       },
       "_string_5b1cd571": {
+        "type": "string"
+      },
+      "_string_9bb5f291": {
+        "description": "github.com/etclabscore/openrpc-go-document.*GetDisguisedNameReply",
         "type": "string"
       }
     }

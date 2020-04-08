@@ -16,13 +16,13 @@ import (
 
 func DefaultParseOptions() *DocumentProviderParseOpts {
 	return &DocumentProviderParseOpts{
-		SchemaMutationFns: []func(*spec.Schema) error{
-			SchemaMutationRequireDefaultOn,
-			SchemaMutationExpand,
-			SchemaMutationRemoveDefinitionsField,
+		SchemaMutationFromTypeFns: []func(s *spec.Schema, ty reflect.Type) {
+			SchemaMutationSetDescriptionFromType,
+			SchemaMutationNilableFromType,
 		},
+
 		ContentDescriptorMutationFns: nil,
-		MethodBlackList:              nil,
+		ContentDescriptorTypeSkipFn:  nil,
 		TypeMapper: func(r reflect.Type) *jsonschema.Type {
 
 			// Handle interface{}, which can be anything.
@@ -41,8 +41,15 @@ func DefaultParseOptions() *DocumentProviderParseOpts {
 			}
 			return nil
 		},
+
+
+		MethodBlackList:              nil,
 		SchemaIgnoredTypes:      nil,
-		ContentDescriptorSkipFn: nil,
+		SchemaMutationFns: []func(*spec.Schema) error{
+			SchemaMutationRequireDefaultOn,
+			SchemaMutationExpand,
+			SchemaMutationRemoveDefinitionsField,
+		},
 	}
 }
 
@@ -116,6 +123,35 @@ func SchemaMutationRemoveDefinitionsField(s *spec.Schema) error {
 	return nil
 }
 
+func SchemaMutationSetDescriptionFromType(s *spec.Schema, ty reflect.Type) {
+	if s.Description == "" {
+		s.Description = fullTypeDescription(ty)
+	}
+}
+
+func SchemaMutationNilableFromType(s *spec.Schema, ty reflect.Type) {
+	/*
+		Golang-specific schema mutations.
+		This logic is not pluggable because it's language-specific,
+		and should be applied to every schema no matter what.
+	*/
+
+	// Move pointer and slice type schemas to a child
+	// of a oneOf schema with a sibling null schema.
+	// Pointer and slice types can be nil.
+	if ty.Kind() == reflect.Ptr || ty.Kind() == reflect.Slice {
+		parentSch := spec.Schema{
+			SchemaProps:        spec.SchemaProps{
+				OneOf: []spec.Schema{
+					*s,
+					nullSchema,
+				},
+			},
+		}
+		*s = parentSch
+	}
+}
+
 func SchemaMutationExpand(s *spec.Schema) error {
 	err := spec.ExpandSchema(s, s, nil)
 	if err != nil {
@@ -182,7 +218,7 @@ func isContextType(t reflect.Type) bool {
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-	return t == contextTypeEthereum
+	return t == contextType
 }
 
 // Does t satisfy the error interface?

@@ -22,10 +22,12 @@ type Discoverer interface {
 }
 
 type DocumentProviderParseOpts struct {
+	SchemaMutationFromTypeFns    []func(s *spec.Schema, ty reflect.Type)
 	SchemaMutationFns            []func(s *spec.Schema) error
 	ContentDescriptorMutationFns []func(isArgs bool, index int, cd *goopenrpcT.ContentDescriptor)
-	ContentDescriptorSkipFn      func(isArgs bool, index int, ty reflect.Type, cd *goopenrpcT.ContentDescriptor) bool
-	MethodBlackList              []string
+
+	MethodBlackList             []string
+	ContentDescriptorTypeSkipFn func(isArgs bool, index int, ty reflect.Type, cd *goopenrpcT.ContentDescriptor) bool
 
 	// TypeMapper gets passed directly to the jsonschema reflection library.
 	TypeMapper func(r reflect.Type) *jsonschema.Type

@@ -1,7 +1,6 @@
 package openrpc_go_document
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"reflect"
@@ -12,6 +11,22 @@ import (
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
 
+/*
+DefaultEthereumServiceProvider provides an instance of a reflection service provider
+that satisfies the defaults needed to reflect a github.com/ethereum/go-ethereum/rpc package-based
+RPC service into an OpenRPC Document.
+
+Background:
+
+go-ethereum/rpc is a popular RPC library with offers an alternative
+design compared to the standard library's offering.
+The conventions it uses to determine valid API methods from go declarations is
+different; go requires a strict signature structure, while go-ethereum/rpc
+allows a wider and different variety and rules.
+To understand the difference, compare the values of DefaultServiceCallbackToMethodEthereum
+and DefaultServiceCallbackToMethodStandard, their API method naming algorithms (ie 'a_b' vs 'A.B'),
+and their eventual assembly into openrpc method types.
+*/
 var DefaultEthereumServiceProvider = &ReceiverServiceConfigurationProviderService{
 	ProviderParseOptions:               DefaultEthereumParseOptions(),
 	ServiceCallbacksFullyQualifiedName: DefaultServiceFullyQualifiedNameEthereum,
@@ -19,6 +34,13 @@ var DefaultEthereumServiceProvider = &ReceiverServiceConfigurationProviderServic
 	ServiceCallbackToMethodFn:          DefaultServiceCallbackToMethodEthereum,
 }
 
+/*
+DefaultServiceFullyQualifiedNameEthereum replicates the default method naming logic of the
+go-ethereum/rpc library. The actual logic also handles '.` joining module and method names,
+but this is optional. Supporting the documentation of this feature
+would require essentially duplicating the method list, and I'm favoring human readability
+over technical conceptual completeness.
+*/
 var DefaultServiceFullyQualifiedNameEthereum = func(receiver interface{}, receiverName, methodName string) string {
 	if receiverName != "" {
 		return receiverName + "_" + methodName
@@ -47,7 +69,7 @@ var DefaultServiceCallbacksEthereum = func(service interface{}) map[string]Callb
 
 var DefaultEthereumParseOptions = func() *DocumentProviderParseOpts {
 	opts := DefaultParseOptions()
-	opts.ContentDescriptorSkipFn = func(isArgs bool, index int, ty reflect.Type, cd *goopenrpcT.ContentDescriptor) bool {
+	opts.ContentDescriptorTypeSkipFn = func(isArgs bool, index int, ty reflect.Type, cd *goopenrpcT.ContentDescriptor) bool {
 		if isArgs && index == 0 && isContextType(ty) {
 			return true
 		}
@@ -80,19 +102,14 @@ var DefaultServiceCallbackToMethodEthereum = func(opts *DocumentProviderParseOpt
 	return method, nil
 }
 
-var (
-	contextTypeEthereum      = reflect.TypeOf((*context.Context)(nil)).Elem()
-	stringType               = reflect.TypeOf("")
-)
-
 // ethereumCallback is a method ethereumCallback which was registered in the server
 type ethereumCallback struct {
-	fn          reflect.Value  // the function
-	rcvr        reflect.Value  // receiver object of method, set if fn is method
-	argTypes    []reflect.Type // input argument types
-	retTypes    []reflect.Type // return types
-	hasCtx      bool           // method's first argument is a context (not included in argTypes)
-	errPos      int            // err return idx, of -1 when method cannot return error
+	fn       reflect.Value  // the function
+	rcvr     reflect.Value  // receiver object of method, set if fn is method
+	argTypes []reflect.Type // input argument types
+	retTypes []reflect.Type // return types
+	hasCtx   bool           // method's first argument is a context (not included in argTypes)
+	errPos   int            // err return idx, of -1 when method cannot return error
 }
 
 func (e *ethereumCallback) Callback() *Callback {
@@ -161,7 +178,7 @@ func (c *ethereumCallback) makeArgTypes() {
 	if c.rcvr.IsValid() {
 		firstArg++
 	}
-	if fntype.NumIn() > firstArg && fntype.In(firstArg) == contextTypeEthereum {
+	if fntype.NumIn() > firstArg && fntype.In(firstArg) == contextType {
 		c.hasCtx = true
 		firstArg++
 	}
@@ -277,11 +294,11 @@ func makeEthereumMethod(opts *DocumentProviderParseOpts, name string, pcb *parse
 
 	runtimeFile, runtimeLine := pcb.runtimeF.FileLine(pcb.runtimeF.Entry())
 
-	collectedParams, err := params(opts.ContentDescriptorSkipFn)
+	collectedParams, err := params(opts.ContentDescriptorTypeSkipFn)
 	if err != nil {
 		return nil, err
 	}
-	collectedResults, err := rets(opts.ContentDescriptorSkipFn)
+	collectedResults, err := rets(opts.ContentDescriptorTypeSkipFn)
 	if err != nil {
 		return nil, err
 	}
@@ -320,4 +337,3 @@ func makeEthereumMethod(opts *DocumentProviderParseOpts, name string, pcb *parse
 	//}, nil
 	//
 }
-

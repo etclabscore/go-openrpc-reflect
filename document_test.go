@@ -297,7 +297,7 @@ func TestDocument_Discover(t *testing.T) {
 
 		serverDoc.Reflector.FlattenSchemas()
 
-		if l := len(spec1.Components.Schemas); l != 23 {
+		if l := len(spec1.Components.Schemas); l != 27 {
 			// Not been flattened yet.
 			t.Fatal("flat schemas", l)
 		}

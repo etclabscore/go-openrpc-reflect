@@ -13,7 +13,7 @@
       "name": "",
       "url": ""
     },
-    "version": "v0.0.0-beta-2020-04-08T05:32:48-05:00-1586341968"
+    "version": "v0.0.0-beta-2020-04-08T08:04:48-05:00-1586351088"
   },
   "servers": [],
   "methods": [
@@ -99,7 +99,7 @@
           "required": true,
           "deprecated": false,
           "schema": {
-            "$ref": "#/components/schemas/__58c9255f"
+            "$ref": "#/components/schemas/__7336580d"
           }
         }
       ],
@@ -196,8 +196,7 @@
           }
         ]
       },
-      "__58c9255f": {
-        "description": "github.com/gregdhill/go-openrpc/types.*ExamplePairing",
+      "__7336580d": {
         "oneOf": [
           {
             "$ref": "#/components/schemas/_object_7c7fcb99"

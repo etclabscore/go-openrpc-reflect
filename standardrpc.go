@@ -13,6 +13,11 @@ import (
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
 
+/*
+DefaultStandardServiceProvider provides an instance of a reflection service provider
+that satisfies the defaults needed to reflect a go standard library rpc package-based
+RPC service into an OpenRPC Document.
+*/
 var DefaultStandardServiceProvider = &ReceiverServiceConfigurationProviderService{
 	ProviderParseOptions:               DefaultParseOptions(),
 	ServiceCallbacksFullyQualifiedName: DefaultServiceFullyQualifiedNameStandard,
@@ -20,6 +25,30 @@ var DefaultStandardServiceProvider = &ReceiverServiceConfigurationProviderServic
 	ServiceCallbackToMethodFn:          DefaultServiceCallbackToMethodStandard,
 }
 
+/*
+DefaultServiceCallbacksStandard collects suitable methods for a given receiver
+in the same way that the go standard library does.
+Unfortunately we can't access a standard lib rpc server's registered methods,
+so we have to use (replicate) the same logic it uses to aggregate (filtering) them.
+*/
+var DefaultServiceCallbacksStandard = func(receiver interface{}) map[string]Callback {
+	ty := reflect.TypeOf(receiver)
+	v := reflect.ValueOf(receiver)
+
+	methods := suitableMethods(ty, true)
+
+	out := make(map[string]Callback)
+	for name, vv := range methods {
+		cb := Callback{v, vv.method.Func}
+		out[name] = cb
+	}
+	return out
+}
+
+/*
+DefaultServiceFullyQualifiedNameStandard replicates the logic of the go standard library's rpc
+package naming convention.
+*/
 var DefaultServiceFullyQualifiedNameStandard = func(receiver interface{}, receiverName, methodName string) string {
 	if receiverName != "" {
 		return receiverName + "." + methodName
@@ -31,19 +60,10 @@ var DefaultServiceFullyQualifiedNameStandard = func(receiver interface{}, receiv
 	return ty.Name() + "." + methodName
 }
 
-var DefaultServiceCallbacksStandard = func(receiver interface{}) map[string]Callback {
-	ty := reflect.TypeOf(receiver)
-	v := reflect.ValueOf(receiver)
-	methods := suitableMethods(ty, true) // debug
-
-	out := make(map[string]Callback)
-	for name, vv := range methods {
-		cb := Callback{v, vv.method.Func} // TODO
-		out[name] = cb
-	}
-	return out
-}
-
+/*
+DefaultServiceCallbackToMethodStandard parses (reflect, ast) the
+given Callback to a corresponding OpenRPC  type Method struct.
+*/
 var DefaultServiceCallbackToMethodStandard = func(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error) {
 	pcb, err := newParsedCallback(cb)
 	if err != nil {
@@ -130,7 +150,7 @@ func makeGoRPCMethod(opts *DocumentProviderParseOpts, name string, pcb *parsedCa
 
 	runtimeFile, runtimeLine := pcb.runtimeF.FileLine(pcb.runtimeF.Entry())
 
-	collectedParams, err := params(opts.ContentDescriptorSkipFn)
+	collectedParams, err := params(opts.ContentDescriptorTypeSkipFn)
 	if err != nil {
 		return nil, err
 	}

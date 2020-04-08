@@ -36,6 +36,14 @@ type DocumentProviderParseOpts struct {
 	SchemaIgnoredTypes []interface{}
 }
 
+
+/*
+RPCServerServiceProvider provides service information common
+to a all methods of an API service, ie the server.
+
+It is a single sibling of the
+potentially-many ReceiverServiceConfigurationProvider(s).
+*/
 type RPCServerServiceProvider interface {
 	OpenRPCInfo() goopenrpcT.Info
 	OpenRPCExternalDocs() *goopenrpcT.ExternalDocs
@@ -58,10 +66,10 @@ func (s *RPCServerServiceProviderService) OpenRPCExternalDocs() *goopenrpcT.Exte
 }
 
 type ReceiverServiceConfigurationProvider interface {
+	ParseOptions() *DocumentProviderParseOpts
 	MethodName(receiver interface{}, receiverName, methodName string) string
 	Callbacks(receiver interface{}) map[string]Callback
 	CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
-	ParseOptions() *DocumentProviderParseOpts
 }
 
 // ReceiverServiceConfigurationProviderService defines a user-defined struct providing necessary
@@ -92,9 +100,9 @@ func (s *ReceiverServiceConfigurationProviderService) CallbackToMethod(opts *Doc
 
 type ReflectedDocument struct {
 	rpcServerServiceProvider              RPCServerServiceProvider
+	receiverServiceConfigurationProviders []ReceiverServiceConfigurationProvider
 	receiverNames                         []string
 	receiverServices                      []interface{}
-	receiverServiceConfigurationProviders []ReceiverServiceConfigurationProvider
 	callbacks                             map[string]Callback // cache?
 	spec1                                 *goopenrpcT.OpenRPCSpec1
 }

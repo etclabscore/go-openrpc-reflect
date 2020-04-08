@@ -53,7 +53,7 @@ func DefaultParseOptions() *DocumentProviderParseOpts {
 	}
 }
 
-var DefaultServerServiceProvider = &RPCServerServiceProviderService{
+var DefaultServerServiceProvider = &ServerDescriptorT{
 	ServiceOpenRPCInfoFn: func() goopenrpcT.Info { return goopenrpcT.Info{} },
 	ServiceOpenRPCExternalDocsFn: func() *goopenrpcT.ExternalDocs {
 		return &goopenrpcT.ExternalDocs{

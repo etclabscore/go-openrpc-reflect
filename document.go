@@ -1,10 +1,14 @@
 package openrpc_go_document
 
 import (
+	"bufio"
+	"bytes"
 	"crypto/sha1"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"reflect"
 	"sort"
 	"strings"
@@ -36,86 +40,138 @@ type DocumentProviderParseOpts struct {
 	SchemaIgnoredTypes []interface{}
 }
 
-
 /*
-RPCServerServiceProvider provides service information common
+ServerDescriptor provides service information common
 to a all methods of an API service, ie the server.
 
 It is a single sibling of the
-potentially-many ReceiverServiceConfigurationProvider(s).
+potentially-many ReceiverServiceDescriptor(s).
 */
-type RPCServerServiceProvider interface {
+type ServerDescriptor interface {
 	OpenRPCInfo() goopenrpcT.Info
 	OpenRPCExternalDocs() *goopenrpcT.ExternalDocs
 }
 
-type RPCServerServiceProviderService struct {
+// ServerDescriptorT implements the ServerDescriptor interface.
+type ServerDescriptorT struct {
 	ServiceOpenRPCInfoFn         func() goopenrpcT.Info
 	ServiceOpenRPCExternalDocsFn func() *goopenrpcT.ExternalDocs
 }
 
-func (s *RPCServerServiceProviderService) OpenRPCInfo() goopenrpcT.Info {
+func (s *ServerDescriptorT) OpenRPCInfo() goopenrpcT.Info {
 	return s.ServiceOpenRPCInfoFn()
 }
 
-func (s *RPCServerServiceProviderService) OpenRPCExternalDocs() *goopenrpcT.ExternalDocs {
+func (s *ServerDescriptorT) OpenRPCExternalDocs() *goopenrpcT.ExternalDocs {
 	if s.ServiceOpenRPCExternalDocsFn != nil {
 		return s.ServiceOpenRPCExternalDocsFn()
 	}
 	return nil
 }
 
-type ReceiverServiceConfigurationProvider interface {
+type ReceiverServiceDescriptor interface {
 	ParseOptions() *DocumentProviderParseOpts
 	MethodName(receiver interface{}, receiverName, methodName string) string
 	Callbacks(receiver interface{}) map[string]Callback
 	CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
 }
 
-// ReceiverServiceConfigurationProviderService defines a user-defined struct providing necessary
+// ReceiverServiceDescriptorT defines a user-defined struct providing necessary
 // functions for the document parses to get the information it needs
 // to make a complete OpenRPC-schema document.
-type ReceiverServiceConfigurationProviderService struct {
+type ReceiverServiceDescriptorT struct {
 	ProviderParseOptions               *DocumentProviderParseOpts
 	ServiceCallbacksFullyQualifiedName func(receiver interface{}, receiverName, methodName string) string
 	ServiceCallbacksFromReceiverFn     func(receiver interface{}) map[string]Callback
 	ServiceCallbackToMethodFn          func(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
 }
 
-func (s *ReceiverServiceConfigurationProviderService) ParseOptions() *DocumentProviderParseOpts {
+func (s *ReceiverServiceDescriptorT) ParseOptions() *DocumentProviderParseOpts {
 	return s.ProviderParseOptions
 }
 
-func (s *ReceiverServiceConfigurationProviderService) MethodName(receiver interface{}, receiverName, methodName string) string {
+func (s *ReceiverServiceDescriptorT) MethodName(receiver interface{}, receiverName, methodName string) string {
 	return s.ServiceCallbacksFullyQualifiedName(receiver, receiverName, methodName)
 }
 
-func (s *ReceiverServiceConfigurationProviderService) Callbacks(receiver interface{}) map[string]Callback {
+func (s *ReceiverServiceDescriptorT) Callbacks(receiver interface{}) map[string]Callback {
 	return s.ServiceCallbacksFromReceiverFn(receiver)
 }
 
-func (s *ReceiverServiceConfigurationProviderService) CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error) {
+func (s *ReceiverServiceDescriptorT) CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error) {
 	return s.ServiceCallbackToMethodFn(opts, name, cb)
 }
 
+// Spec1 is a wrapped type around an openrpc schema document.
+type Document struct {
+	Discoverer
+	Static    *StaticDocument
+	Reflector *ReflectedDocument
+}
+
+// NewReflectDocument initializes a Document type given a receiverServiceConfigurationProviders (eg service or aggregate of services)
+// and options to use while parsing the runtime code into openrpc types.
+func NewReflectDocument(serverProvider ServerDescriptor) *Document {
+	d := &Document{}
+	d.Reflector = &ReflectedDocument{
+		rpcServerServiceProvider: serverProvider,
+	}
+	return d
+}
+
+func NewStaticDocument(input io.Reader) *Document {
+	d := &Document{}
+	d.Static = &StaticDocument{}
+
+	bs, err := ioutil.ReadAll(input)
+	if err != nil {
+		panic("fixme")
+	}
+
+	d.Static.raw = bs
+	return d
+}
+
+func (d *Document) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
+	if d.Static != nil {
+		return d.Static.Discover()
+	} else if d.Reflector != nil {
+		return d.Reflector.Discover()
+	}
+	return nil, errors.New("empty document")
+}
+
+type StaticDocument struct {
+	raw []byte
+}
+
+func (s *StaticDocument) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
+	if len(s.raw) == 0 {
+		return nil, errors.New("missing raw document")
+	}
+	out := &goopenrpcT.OpenRPCSpec1{}
+	err := json.Unmarshal(s.raw, out)
+	return out, err
+}
+
 type ReflectedDocument struct {
-	rpcServerServiceProvider              RPCServerServiceProvider
-	receiverServiceConfigurationProviders []ReceiverServiceConfigurationProvider
+	rpcServerServiceProvider              ServerDescriptor
+	receiverServiceConfigurationProviders []ReceiverServiceDescriptor
 	receiverNames                         []string
 	receiverServices                      []interface{}
 	callbacks                             map[string]Callback // cache?
 	spec1                                 *goopenrpcT.OpenRPCSpec1
 }
 
-func (r *ReflectedDocument) RegisterReceiver(receiver interface{}, provider ReceiverServiceConfigurationProvider) {
+func (r *ReflectedDocument) RegisterReceiver(receiver interface{}, provider ReceiverServiceDescriptor) {
 	r.registerReceiverWithName("", receiver, provider)
 }
 
-func (d *ReflectedDocument) RegisterReceiverWithName(name string, receiver interface{}, provider ReceiverServiceConfigurationProvider) {
+func (d *ReflectedDocument) RegisterReceiverWithName(name string, receiver interface{}, provider ReceiverServiceDescriptor) {
 	d.registerReceiverWithName(name, receiver, provider)
 }
 
-func (s *ReflectedDocument) registerReceiverWithName(name string, receiver interface{}, provider ReceiverServiceConfigurationProvider) {
+func (s *ReflectedDocument) registerReceiverWithName(name string, receiver interface{}, provider ReceiverServiceDescriptor) {
 	if len(s.receiverNames) == 0 {
 		s.receiverNames = []string{}
 	}
@@ -123,7 +179,7 @@ func (s *ReflectedDocument) registerReceiverWithName(name string, receiver inter
 		s.receiverServices = []interface{}{}
 	}
 	if len(s.receiverServiceConfigurationProviders) == 0 {
-		s.receiverServiceConfigurationProviders = []ReceiverServiceConfigurationProvider{}
+		s.receiverServiceConfigurationProviders = []ReceiverServiceDescriptor{}
 	}
 	s.receiverNames = append(s.receiverNames, name)
 	s.receiverServices = append(s.receiverServices, receiver)
@@ -189,52 +245,6 @@ func (r *ReflectedDocument) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
 
 	return r.spec1, nil
 }
-
-type StaticDocument struct {
-	raw []byte
-}
-
-func (s *StaticDocument) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
-	if len(s.raw) == 0 {
-		return nil, errors.New("missing raw document")
-	}
-	out := &goopenrpcT.OpenRPCSpec1{}
-	err := json.Unmarshal(s.raw, out)
-	return out, err
-}
-
-// Spec1 is a wrapped type around an openrpc schema document.
-type Document struct {
-	Discoverer
-	Static    *StaticDocument
-	Reflector *ReflectedDocument
-}
-
-// NewReflectDocument initializes a Document type given a receiverServiceConfigurationProviders (eg service or aggregate of services)
-// and options to use while parsing the runtime code into openrpc types.
-func NewReflectDocument(serverProvider RPCServerServiceProvider) *Document {
-	d := &Document{}
-	d.Reflector = &ReflectedDocument{
-		rpcServerServiceProvider: serverProvider,
-	}
-	return d
-}
-
-func NewStaticDocument(input []byte) *Document {
-	d := &Document{}
-	d.Static = &StaticDocument{raw: input}
-	return d
-}
-
-func (d *Document) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
-	if d.Static != nil {
-		return d.Static.Discover()
-	} else if d.Reflector != nil {
-		return d.Reflector.Discover()
-	}
-	return nil, errors.New("empty document")
-}
-
 func (d *ReflectedDocument) FlattenSchemas() *ReflectedDocument {
 
 	d.documentMethodsSchemaMutation(func(s *spec.Schema) error {

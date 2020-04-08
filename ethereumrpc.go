@@ -27,7 +27,7 @@ To understand the difference, compare the values of DefaultServiceCallbackToMeth
 and DefaultServiceCallbackToMethodStandard, their API method naming algorithms (ie 'a_b' vs 'A.B'),
 and their eventual assembly into openrpc method types.
 */
-var DefaultEthereumServiceProvider = &ReceiverServiceConfigurationProviderService{
+var DefaultEthereumServiceProvider = &ReceiverServiceDescriptorT{
 	ProviderParseOptions:               DefaultEthereumParseOptions(),
 	ServiceCallbacksFullyQualifiedName: DefaultServiceFullyQualifiedNameEthereum,
 	ServiceCallbacksFromReceiverFn:     DefaultServiceCallbacksEthereum,

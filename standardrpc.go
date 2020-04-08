@@ -18,7 +18,7 @@ DefaultStandardServiceProvider provides an instance of a reflection service prov
 that satisfies the defaults needed to reflect a go standard library rpc package-based
 RPC service into an OpenRPC Document.
 */
-var DefaultStandardServiceProvider = &ReceiverServiceConfigurationProviderService{
+var DefaultStandardServiceProvider = &ReceiverServiceDescriptorT{
 	ProviderParseOptions:               DefaultParseOptions(),
 	ServiceCallbacksFullyQualifiedName: DefaultServiceFullyQualifiedNameStandard,
 	ServiceCallbacksFromReceiverFn:     DefaultServiceCallbacksStandard,

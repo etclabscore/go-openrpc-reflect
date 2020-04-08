@@ -178,11 +178,6 @@ func TestCallback_HasReceiver(t *testing.T) {
 	if cb.HasReceiver() {
 		t.Fatal("bad")
 	}
-
-	cb2 := Callback{reflect.ValueOf(nil), reflect.ValueOf(NoReceiverFunction)}
-	if cb2.HasReceiver() {
-		t.Fatal("bad")
-	}
 }
 
 const thing = "aset"
@@ -281,7 +276,7 @@ func TestDocument_Discover(t *testing.T) {
 		serverDoc.Reflector.RegisterReceiver(standardService, sp)
 
 		// serverDoc.Discover() is a shortcut for either Static or Reflected discovery.
-		spec1, err := serverDoc.discover()
+		spec1, err := serverDoc.Discover()
 		if err != nil {
 			t.Fatal(err)
 		}

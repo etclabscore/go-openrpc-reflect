@@ -20,7 +20,7 @@ import (
 )
 
 type Discoverer interface {
-	Discover() (*goopenrpcT.OpenRPCSpec1, error)
+	discover() (*goopenrpcT.OpenRPCSpec1, error)
 }
 
 type DocumentProviderParseOpts struct {
@@ -132,9 +132,9 @@ func NewStaticDocument(input io.Reader) *Document {
 
 func (d *Document) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
 	if d.Static != nil {
-		return d.Static.Discover()
+		return d.Static.discover()
 	} else if d.Reflector != nil {
-		return d.Reflector.Discover()
+		return d.Reflector.discover()
 	}
 	return nil, errors.New("empty document")
 }
@@ -143,7 +143,7 @@ type StaticDocument struct {
 	raw []byte
 }
 
-func (s *StaticDocument) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
+func (s *StaticDocument) discover() (*goopenrpcT.OpenRPCSpec1, error) {
 	if len(s.raw) == 0 {
 		return nil, errors.New("missing raw document")
 	}
@@ -184,7 +184,7 @@ func (s *ReflectedDocument) registerReceiverWithName(name string, receiver inter
 	s.receiverServiceConfigurationProviders = append(s.receiverServiceConfigurationProviders, provider)
 }
 
-func (r *ReflectedDocument) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
+func (r *ReflectedDocument) discover() (*goopenrpcT.OpenRPCSpec1, error) {
 	if r.spec1 != nil {
 		return r.spec1, nil
 	}
@@ -243,7 +243,7 @@ func (r *ReflectedDocument) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
 
 	return r.spec1, nil
 }
-func (d *ReflectedDocument) FlattenSchemas() *ReflectedDocument {
+func (d *ReflectedDocument) flattenSchemas() *ReflectedDocument {
 
 	d.documentMethodsSchemaMutation(func(s *spec.Schema) error {
 		id := schemaKey(*s)
@@ -283,6 +283,6 @@ func (r *ReflectedDocument) documentMethodsSchemaMutation(mut func(s *spec.Schem
 	}
 }
 
-func (d *ReflectedDocument) Inline() *Document {
+func (d *ReflectedDocument) inline() *Document {
 	return nil
 }

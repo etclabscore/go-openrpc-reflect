@@ -218,7 +218,7 @@ func TestDocument_Discover(t *testing.T) {
 
 		// Discover method introspects methods at runtime and
 		// instantiates a reflective OpenRPC schema document.
-		spec1, err := serverDoc.Reflector.Discover()
+		spec1, err := serverDoc.Reflector.discover()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -232,7 +232,7 @@ func TestDocument_Discover(t *testing.T) {
 			t.Fatal("schemas", l)
 		}
 
-		serverDoc.Reflector.FlattenSchemas()
+		serverDoc.Reflector.flattenSchemas()
 
 		if l := len(spec1.Components.Schemas); l != 18 {
 			// Not been flattened yet.
@@ -281,7 +281,7 @@ func TestDocument_Discover(t *testing.T) {
 		serverDoc.Reflector.RegisterReceiver(standardService, sp)
 
 		// serverDoc.Discover() is a shortcut for either Static or Reflected discovery.
-		spec1, err := serverDoc.Discover()
+		spec1, err := serverDoc.discover()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -295,7 +295,7 @@ func TestDocument_Discover(t *testing.T) {
 			t.Fatal("schemas", l)
 		}
 
-		serverDoc.Reflector.FlattenSchemas()
+		serverDoc.Reflector.flattenSchemas()
 
 		if l := len(spec1.Components.Schemas); l != 27 {
 			// Not been flattened yet.

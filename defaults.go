@@ -16,7 +16,7 @@ import (
 
 func DefaultParseOptions() *DocumentProviderParseOpts {
 	return &DocumentProviderParseOpts{
-		SchemaMutationFromTypeFns: []func(s *spec.Schema, ty reflect.Type) {
+		SchemaMutationFromTypeFns: []func(s *spec.Schema, ty reflect.Type){
 			SchemaMutationSetDescriptionFromType,
 			SchemaMutationNilableFromType,
 		},
@@ -42,9 +42,8 @@ func DefaultParseOptions() *DocumentProviderParseOpts {
 			return nil
 		},
 
-
-		MethodBlackList:              nil,
-		SchemaIgnoredTypes:      nil,
+		MethodBlackList:    nil,
+		SchemaIgnoredTypes: nil,
 		SchemaMutationFns: []func(*spec.Schema) error{
 			SchemaMutationRequireDefaultOn,
 			SchemaMutationExpand,
@@ -141,7 +140,7 @@ func SchemaMutationNilableFromType(s *spec.Schema, ty reflect.Type) {
 	// Pointer and slice types can be nil.
 	if ty.Kind() == reflect.Ptr || ty.Kind() == reflect.Slice {
 		parentSch := spec.Schema{
-			SchemaProps:        spec.SchemaProps{
+			SchemaProps: spec.SchemaProps{
 				OneOf: []spec.Schema{
 					*s,
 					nullSchema,

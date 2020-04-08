@@ -10,6 +10,6 @@ func NewDiscoverService(d *Document) *EthereumService {
 	return &EthereumService{doc: d}
 }
 
-func (s *EthereumService) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
-	return s.doc.Reflector.Discover()
+func (s *EthereumService) discover() (*goopenrpcT.OpenRPCSpec1, error) {
+	return s.doc.Reflector.discover()
 }

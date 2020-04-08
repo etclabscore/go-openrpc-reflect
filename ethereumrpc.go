@@ -5,6 +5,7 @@ import (
 	"log"
 	"reflect"
 	"strings"
+	"unicode"
 
 	"github.com/davecgh/go-spew/spew"
 	go_jsonschema_traverse "github.com/etclabscore/go-jsonschema-traverse"
@@ -339,4 +340,13 @@ func (c *ethereumCallback) makeRetTypes() {
 	for i := 0; i < fntype.NumOut(); i++ {
 		c.retTypes[i] = fntype.Out(i)
 	}
+}
+
+// formatName converts to first character of name to lowercase.
+func formatEthereumName(name string) string {
+	ret := []rune(name)
+	if len(ret) > 0 {
+		ret[0] = unicode.ToLower(ret[0])
+	}
+	return string(ret)
 }

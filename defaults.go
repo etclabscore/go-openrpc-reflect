@@ -228,11 +228,3 @@ func isErrorType(t reflect.Type) bool {
 	return t.Implements(errorType)
 }
 
-// formatName converts to first character of name to lowercase.
-func formatEthereumName(name string) string {
-	ret := []rune(name)
-	if len(ret) > 0 {
-		ret[0] = unicode.ToLower(ret[0])
-	}
-	return string(ret)
-}

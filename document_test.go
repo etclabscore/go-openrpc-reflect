@@ -180,8 +180,6 @@ func TestCallback_HasReceiver(t *testing.T) {
 	}
 }
 
-const thing = "aset"
-
 const testTermsOfServiceURI = "https://github.com/etclabscore/openrpc-go-document/blob/master/LICENSE.md"
 
 func TestDocument_Discover(t *testing.T) {

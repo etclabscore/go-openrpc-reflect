@@ -1,9 +1,10 @@
 package openrpc_go_document
 
 import (
-	"context"
+	"crypto/sha1"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -19,96 +20,152 @@ import (
 	Mock types and methods and functions.
 */
 
-/*
-ETHEREUM RPC Style.
-*/
-
-// MyEthereumService will be a receiver.
-type MyEthereumService struct {
+// MyBasicService will be a receiver.
+type MyBasicService struct {
+	mocking
+	parameterA, parameterB int
+	stateFullData map[string]*MyBasicObject
 }
 
-// MyVal is an mock struct type.
+type mocking struct {
+	callCount int
+	methods []string
+	args [][]interface{}
+}
+
+func (m *mocking) setCalledWith(method string, args ...interface{}) {
+	m.callCount++
+	if len(m.methods) == 0 {
+		m.methods = []string{}
+	}
+	if len(m.args) == 0 {
+		m.args = [][]interface{}{}
+	}
+	m.methods = append(m.methods, method)
+	m.args = append(m.args, []interface{}{args})
+}
+
+// MyBasicObject is an mock struct type.
 // Some of its fields have comments, and it demonstrates how json/jsonschema tags work.
-type MyVal struct {
+type MyBasicObject struct {
 	Name string `jsonschema:"required"`
 	Age  int    `json:"oldness" jsonschema:"required"`
 
 	// CellsN describes how many cells in the body.
-	CellN *big.Int `jsonschema:"required"`
+	CellN *big.Int `jsonschema:"required"` // CellsN comments on the side.
 
 	Exists   bool // jsonschema:not_required
 	thoughts []string
 }
 
-// Fetch is a mock method.
-func (m *MyEthereumService) Fetch() (result *MyVal, err error) {
-	return &MyVal{}, nil
+// GetAll returns all the objects contained in state.
+func (m *MyBasicService) GetAll() (result []*MyBasicObject, err error) {
+	m.mocking.setCalledWith("GetAll")
+	result = []*MyBasicObject{}
+	for _, v := range m.stateFullData {
+		result = append(result, v)
+	}
+	return result, nil
 }
 
-// Do is a very sparse mock method.
-func (m *MyEthereumService) Do(string) {
-
-}
-
-// Make is a busy method with lots of comments.
-// More notes. Is Deprecated.
-func (m *MyEthereumService) Make(ctx context.Context /*name is thing*/, name string /*name is thing*/, cellsN *big.Int) (myResult MyVal, err error) {
-	/*
-		Make does things!
-	*/
-	return MyVal{Name: name, CellN: cellsN}, nil
-}
-
-// Produce will not be included in the standard RPC service: it does not use a pointer receiver.
-func (m MyEthereumService) Produce(name string) error {
+// Set places a value in state.
+func (m *MyBasicService) Set(value MyBasicObject) (err error) {
+	m.mocking.setCalledWith("Set", value)
+	if m.stateFullData == nil {
+		m.stateFullData = make(map[string]*MyBasicObject)
+	}
+	m.stateFullData[value.Name] = &value
 	return nil
 }
 
-//  callCounter will not be included in the standard RPC service: is a private method.
-func (m *MyEthereumService) callCounter() (n int, err error) {
-	return 14, nil
+// GetDisguisedName gets a sort-of disguised name for a user.
+func (m *MyBasicService) GetDisguisedName(name string) (disguise string, err error) {
+	m.mocking.setCalledWith("EncodedName", name)
+	if v, ok := m.stateFullData[name]; !ok {
+		return "", errors.New("no object by that name")
+	} else {
+		sum := sha1.Sum([]byte(v.Name))
+		return fmt.Sprintf(`%s, aka %x`, v.Name, sum[:4]), nil
+	}
 }
+
+// OperateOnExternalType accepts a type imported from another package as it's argument.
+func (m *MyBasicService) OperateOnExternalType(externalObject *goopenrpcT.ExamplePairing) error {
+
+	return nil
+}
+
+/*
+Implement an API for Go Standard library RPC for our MyBasicService.
+*/
+
+type MyBasicServiceRPC struct {
+	mocking
+	base *MyBasicService
+}
+
+// GetAllArg is the argument accepted by the standard RPC service GetAll method.
+// Required: false.
+type GetAllArg interface{}
+
+// GetAllReply is the kind of response returned by the standard RPC service GetAll method.
+type GetAllReply []*MyBasicObject
+
+// GetAll is an RPC wrapper method around the MyBasicService `GetAll` method.
+func (rpc *MyBasicServiceRPC) GetAll(arg GetAllArg, reply *GetAllReply) error {
+	rpc.mocking.setCalledWith("GetAll", arg)
+	got, err := rpc.base.GetAll()
+	if err != nil { return err }
+	*reply = got
+	return nil
+}
+
+// ToggleInternalThing is an unobservable method without parameters; it uses neither args nor reply.
+// It has primitive types as arguments which you can set to arbitrary values.
+func (rpc *MyBasicServiceRPC) ToggleInternalThing(uint, *float64) error {
+	rpc.mocking.setCalledWith("ToggleInternalThing")
+	return nil
+}
+
+type SetArg MyBasicObject
+type SetReply interface{}
+
+// Set is an RPC wrapper method.
+func (rpc *MyBasicServiceRPC) Set(arg SetArg, reply *SetReply) (err error) {
+	rpc.mocking.setCalledWith("Set", arg)
+	err = rpc.base.Set(MyBasicObject(arg))
+	return
+}
+
+
+type GetDisguisedNameReply string
+
+// GetDisguisedName is also a wrapper method.
+func (rpc *MyBasicServiceRPC) GetDisguisedName(name string, reply *GetDisguisedNameReply) error {
+	rpc.mocking.setCalledWith("GetDisguisedName", name)
+	name, err := rpc.base.GetDisguisedName(name)
+	if err != nil {
+		return err
+	}
+	*reply = GetDisguisedNameReply(name)
+	return nil
+}
+
+type OperateOnExternalTypeReply interface{}
+// OperateOnExternalType accepts a type imported from another package as it's argument.
+func (m *MyBasicServiceRPC) OperateOnExternalType(arg *goopenrpcT.ExamplePairing, reply *OperateOnExternalTypeReply) error {
+	m.mocking.setCalledWith("OperateOnExternalType", arg)
+	return nil
+}
+
+/*
+An exemplary function that can be served without a receiver.
+*/
 
 // NoReceiverFunction is a public function (without a receiver).
 // Yes! It can still be documented, if you want.
 func NoReceiverFunction(name string) (n int, err error) {
 	return 42, nil
-}
-
-/*
-STANDARD RPC Style.
-*/
-
-// MyStandardService implements a very basic standard lib rpc service.
-type MyStandardService struct{}
-
-type MyStandardAddRPCArg string
-type MyStandardAddRPCReply int
-
-func (r *MyStandardService) Add(input MyStandardAddRPCArg, response *MyStandardAddRPCReply) (err error) {
-	return nil
-}
-
-type MyStandardRandomRPCArg string
-type MyStandardRandomRPCReply int
-
-func (r *MyStandardService) RandomNum(noopString MyStandardRandomRPCArg, response *MyStandardRandomRPCReply) error {
-	*response = 42
-	return nil
-}
-
-type MyStandardIsZeroRPCArg int
-
-type MyStandardIsZeroRPCReply struct {
-	Explanation  string
-	Mansplaining bool
-}
-
-func (r *MyStandardService) IsZeroNum(input MyStandardIsZeroRPCArg, response *MyStandardIsZeroRPCReply) error {
-	if input == 0 {
-		response = &MyStandardIsZeroRPCReply{"Probably close", false}
-	}
-	return errors.New("could not explain a number that is probably not zero")
 }
 
 // ---
@@ -121,7 +178,14 @@ func TestCallback_HasReceiver(t *testing.T) {
 	if cb.HasReceiver() {
 		t.Fatal("bad")
 	}
+
+	cb2 := Callback{reflect.ValueOf(nil), reflect.ValueOf(NoReceiverFunction)}
+	if cb2.HasReceiver() {
+		t.Fatal("bad")
+	}
 }
+
+const thing = "aset"
 
 const testTermsOfServiceURI = "https://github.com/etclabscore/openrpc-go-document/blob/master/LICENSE.md"
 
@@ -129,16 +193,14 @@ func TestDocument_Discover(t *testing.T) {
 
 	t.Run("EthereumRPC", func(t *testing.T) {
 
-		// Get our service.
-		ethereumService := new(MyEthereumService)
+		// Instantiate our service.
+		ethereumService := new(MyBasicService)
 
-		// Wrap service to create serviceProvider.
-		serviceProvider := DefaultEthereumServiceProvider(ethereumService)
-
-		// Adjust settings from default.
-		serviceProvider.ServiceOpenRPCInfo = func() goopenrpcT.Info {
+		// Server settings are top-level; one ~~server~~ API, one document.
+		serverConfigurationP := DefaultServerServiceProvider
+		serverConfigurationP.ServiceOpenRPCInfoFn = func() goopenrpcT.Info {
 			return goopenrpcT.Info{
-				Title:          "My Ethereum Service",
+				Title:          "My Ethereum-Style Service",
 				Description:    "Oooohhh!",
 				TermsOfService: testTermsOfServiceURI,
 				Contact:        goopenrpcT.Contact{},
@@ -148,32 +210,36 @@ func TestDocument_Discover(t *testing.T) {
 		}
 
 		// Get our document provider from the serviceProvider.
-		doc := DocumentProvider(serviceProvider, DefaultEthereumParseOptions())
+		serverDoc := NewReflectDocument(serverConfigurationP)
+
+		rp := DefaultEthereumServiceProvider
+		serverDoc.Reflector.RegisterReceiver(ethereumService, rp)
+
 
 		// Discover method introspects methods at runtime and
 		// instantiates a reflective OpenRPC schema document.
-		err := doc.Discover()
+		spec1, err := serverDoc.Reflector.Discover()
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if l := len(doc.Spec1().Methods); l != 3 {
+		if l := len(spec1.Methods); l != 4 {
 			t.Fatal("methods", l)
 		}
 
-		if l := len(doc.Spec1().Components.Schemas); l != 0 {
+		if l := len(spec1.Components.Schemas); l != 0 {
 			// Not been flattened yet.
 			t.Fatal("schemas", l)
 		}
 
-		doc.FlattenSchemas()
+		serverDoc.Reflector.FlattenSchemas()
 
-		if l := len(doc.Spec1().Components.Schemas); l != 8 {
+		if l := len(spec1.Components.Schemas); l != 18 {
 			// Not been flattened yet.
 			t.Fatal("flat schemas", l)
 		}
 
-		b, _ := json.MarshalIndent(doc.Spec1(), "", "  ")
+		b, _ := json.MarshalIndent(spec1, "", "  ")
 		t.Logf(string(b))
 
 		err = ioutil.WriteFile(filepath.Join("testdata", "output", "ethereum.json"), b, os.ModePerm)
@@ -184,9 +250,16 @@ func TestDocument_Discover(t *testing.T) {
 	})
 
 	t.Run("StandardRPC", func(t *testing.T) {
-		standardService := new(MyStandardService)
-		provider := DefaultStandardRPCServiceProvider(standardService)
-		provider.ServiceOpenRPCInfo = func() goopenrpcT.Info {
+
+		standardService := new(MyBasicServiceRPC)
+
+		// Server settings are top-level; one ~~server~~ API, one document.
+		//
+		// Get the server (not service!) provider default.
+		serverConfigurationP := DefaultServerServiceProvider
+
+		// Modify the server config.
+		serverConfigurationP.ServiceOpenRPCInfoFn = func() goopenrpcT.Info {
 			return goopenrpcT.Info{
 				Title:          "My Standard Service",
 				Description:    "Aaaaahh!",
@@ -196,30 +269,40 @@ func TestDocument_Discover(t *testing.T) {
 				Version:        "v0.0.0-beta",
 			}
 		}
-		doc := DocumentProvider(provider, DefaultParseOptions())
 
-		err := doc.Discover()
+		// Create a new "reflectable" document for this server.
+		serverDoc := NewReflectDocument(serverConfigurationP)
+
+		// Get the service provider default for our RPC API style,
+		// in this case, the Go standard lib.
+		sp := DefaultStandardServiceProvider
+
+		// Register our receiver-based service standardService.
+		serverDoc.Reflector.RegisterReceiver(standardService, sp)
+
+		// serverDoc.Discover() is a shortcut for either Static or Reflected discovery.
+		spec1, err := serverDoc.Discover()
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if l := len(doc.Spec1().Methods); l != 3 {
+		if l := len(spec1.Methods); l != 5 {
 			t.Fatal("methods", l)
 		}
 
-		if l := len(doc.Spec1().Components.Schemas); l != 0 {
+		if l := len(spec1.Components.Schemas); l != 0 {
 			// Not been flattened yet.
 			t.Fatal("schemas", l)
 		}
 
-		doc.FlattenSchemas()
+		serverDoc.Reflector.FlattenSchemas()
 
-		if l := len(doc.Spec1().Components.Schemas); l != 8 {
+		if l := len(spec1.Components.Schemas); l != 23 {
 			// Not been flattened yet.
 			t.Fatal("flat schemas", l)
 		}
 
-		b, _ := json.MarshalIndent(doc.Spec1(), "", "  ")
+		b, _ := json.MarshalIndent(spec1, "", "  ")
 		t.Logf(string(b))
 
 		err = ioutil.WriteFile(filepath.Join("testdata", "output", "standard.json"), b, os.ModePerm)

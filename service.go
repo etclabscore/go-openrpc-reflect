@@ -11,5 +11,5 @@ func NewDiscoverService(d *Document) *EthereumService {
 }
 
 func (s *EthereumService) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
-	return s.doc.Spec1(), nil
+	return s.doc.Reflector.Discover()
 }

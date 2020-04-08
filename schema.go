@@ -40,13 +40,19 @@ func typeToSchema(opts *DocumentProviderParseOpts, ty reflect.Type) spec.Schema 
 		log.Fatal(err)
 	}
 
-	// NOTE: Debug toggling.
-	expand := true
-	if expand {
-		err = spec.ExpandSchema(&sch, &sch, nil)
-		if err != nil {
-			log.Fatal(err)
+	// Move pointer and slice type schemas to a child
+	// of a oneOf schema with a sibling null schema.
+	// Pointer and slice types can be nil.
+	if ty.Kind() == reflect.Ptr || ty.Kind() == reflect.Slice {
+		parentSch := spec.Schema{
+			SchemaProps:        spec.SchemaProps{
+				OneOf: []spec.Schema{
+					sch,
+					nullSchema,
+				},
+			},
 		}
+		sch = parentSch
 	}
 
 	// Again, this should be pluggable.
@@ -61,13 +67,16 @@ func typeToSchema(opts *DocumentProviderParseOpts, ty reflect.Type) spec.Schema 
 }
 
 func fullTypeDescription(ty reflect.Type) string {
+	pre := ""
 	if ty.Kind() == reflect.Ptr {
+		pre = "*"
 		ty = ty.Elem()
 	}
 
+	out := fmt.Sprintf(`%s%s`, pre, ty.Name())
 	pack := ty.PkgPath()
 	if pack != "" {
-		return fmt.Sprintf(`%s.%s`, ty.PkgPath(), ty.Name())
+		return fmt.Sprintf("%s.%s", pack, out)
 	}
-	return ty.String()
+	return out
 }

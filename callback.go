@@ -1,9 +1,11 @@
 package openrpc_go_document
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
+	"go/printer"
 	"go/token"
 	"reflect"
 	"runtime"
@@ -20,6 +22,7 @@ type parsedCallback struct {
 	cb       *Callback
 	runtimeF *runtime.Func
 	fdecl    *ast.FuncDecl
+	printed  []byte
 }
 
 func (cb *Callback) Rcvr() reflect.Value {
@@ -42,10 +45,9 @@ func (cb *Callback) HasReceiver() bool {
 	if cb.Receiver == NoReceiverValue || reflect.TypeOf(cb.Receiver) == NoReceiver {
 		return false
 	}
-	if !cb.Receiver.IsNil() && cb.Receiver.IsValid() {
-		return true
-	}
-	return false
+
+	// Optimistic receiver
+	return true
 }
 
 func (cb *Callback) HasContext() bool {
@@ -103,9 +105,21 @@ func newParsedCallback(cb Callback) (*parsedCallback, error) {
 	if astFuncDecl == nil {
 		return nil, fmt.Errorf("nil ast func cb=%v", cb)
 	}
-	return &parsedCallback{
+
+	pcb := &parsedCallback{
 		cb:       &cb,
 		runtimeF: runtimeFunc,
 		fdecl:    astFuncDecl,
-	}, nil
+		printed: []byte{},
+	}
+
+	out := []byte{}
+	buf := bytes.NewBuffer(out)
+	err = printer.Fprint(buf, tokenFileSet, astFuncDecl)
+	if err != nil {
+		return nil, err
+	}
+	pcb.printed = buf.Bytes()
+
+	return pcb, nil
 }

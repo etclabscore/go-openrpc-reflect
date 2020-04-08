@@ -1,7 +1,6 @@
 package openrpc_go_document
 
 import (
-	"context"
 	"crypto/sha1"
 	"encoding/json"
 	"errors"
@@ -18,134 +17,215 @@ import (
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
 
-var (
-	contextType = reflect.TypeOf((*context.Context)(nil)).Elem()
-	errorType   = reflect.TypeOf((*error)(nil)).Elem()
-)
-
-type MutateType string
+type Discoverer interface {
+	Discover() (*goopenrpcT.OpenRPCSpec1, error)
+}
 
 type DocumentProviderParseOpts struct {
 	SchemaMutationFns            []func(s *spec.Schema) error
 	ContentDescriptorMutationFns []func(isArgs bool, index int, cd *goopenrpcT.ContentDescriptor)
+	ContentDescriptorSkipFn      func(isArgs bool, index int, ty reflect.Type, cd *goopenrpcT.ContentDescriptor) bool
 	MethodBlackList              []string
 
 	// TypeMapper gets passed directly to the jsonschema reflection library.
-	TypeMapper              func(r reflect.Type) *jsonschema.Type
-	SchemaIgnoredTypes      []interface{}
-	ContentDescriptorSkipFn func(isArgs bool, index int, cd *goopenrpcT.ContentDescriptor) bool
+	TypeMapper func(r reflect.Type) *jsonschema.Type
+
+	// SchemaIgnoredTypes also gets passed directly to the jsonschema reflection library.
+	SchemaIgnoredTypes []interface{}
 }
 
-type ServiceProvider interface {
-	Callbacks() map[string]Callback
-	CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
+type RPCServerServiceProvider interface {
 	OpenRPCInfo() goopenrpcT.Info
 	OpenRPCExternalDocs() *goopenrpcT.ExternalDocs
 }
 
-// ServerProviderService defines a user-defined struct providing necessary
-// functions for the document parses to get the information it needs
-// to make a complete OpenRPC-schema document.
-type ServerProviderService struct {
-	ServiceCallbacksFromReceiver func() map[string]Callback
-	ServiceCallbackToMethod      func(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
-	ServiceOpenRPCInfo           func() goopenrpcT.Info
-	ServiceOpenRPCExternalDocs   func() *goopenrpcT.ExternalDocs
+type RPCServerServiceProviderService struct {
+	ServiceOpenRPCInfoFn         func() goopenrpcT.Info
+	ServiceOpenRPCExternalDocsFn func() *goopenrpcT.ExternalDocs
 }
 
-func (s *ServerProviderService) Callbacks() map[string]Callback {
-	return s.ServiceCallbacksFromReceiver()
+func (s *RPCServerServiceProviderService) OpenRPCInfo() goopenrpcT.Info {
+	return s.ServiceOpenRPCInfoFn()
 }
 
-func (s *ServerProviderService) CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error) {
-	return s.ServiceCallbackToMethod(opts, name, cb)
-}
-
-func (s *ServerProviderService) OpenRPCInfo() goopenrpcT.Info {
-	return s.ServiceOpenRPCInfo()
-}
-
-func (s *ServerProviderService) OpenRPCExternalDocs() *goopenrpcT.ExternalDocs {
-	if s.ServiceOpenRPCExternalDocs != nil {
-		return s.ServiceOpenRPCExternalDocs()
+func (s *RPCServerServiceProviderService) OpenRPCExternalDocs() *goopenrpcT.ExternalDocs {
+	if s.ServiceOpenRPCExternalDocsFn != nil {
+		return s.ServiceOpenRPCExternalDocsFn()
 	}
 	return nil
+}
+
+type ReceiverServiceConfigurationProvider interface {
+	MethodName(receiver interface{}, receiverName, methodName string) string
+	Callbacks(receiver interface{}) map[string]Callback
+	CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
+	ParseOptions() *DocumentProviderParseOpts
+}
+
+// ReceiverServiceConfigurationProviderService defines a user-defined struct providing necessary
+// functions for the document parses to get the information it needs
+// to make a complete OpenRPC-schema document.
+type ReceiverServiceConfigurationProviderService struct {
+	ProviderParseOptions               *DocumentProviderParseOpts
+	ServiceCallbacksFullyQualifiedName func(receiver interface{}, receiverName, methodName string) string
+	ServiceCallbacksFromReceiverFn     func(receiver interface{}) map[string]Callback
+	ServiceCallbackToMethodFn          func(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
+}
+
+func (s *ReceiverServiceConfigurationProviderService) ParseOptions() *DocumentProviderParseOpts {
+	return s.ProviderParseOptions
+}
+
+func (s *ReceiverServiceConfigurationProviderService) MethodName(receiver interface{}, receiverName, methodName string) string {
+	return s.ServiceCallbacksFullyQualifiedName(receiver, receiverName, methodName)
+}
+
+func (s *ReceiverServiceConfigurationProviderService) Callbacks(receiver interface{}) map[string]Callback {
+	return s.ServiceCallbacksFromReceiverFn(receiver)
+}
+
+func (s *ReceiverServiceConfigurationProviderService) CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error) {
+	return s.ServiceCallbackToMethodFn(opts, name, cb)
+}
+
+type ReflectedDocument struct {
+	rpcServerServiceProvider              RPCServerServiceProvider
+	receiverNames                         []string
+	receiverServices                      []interface{}
+	receiverServiceConfigurationProviders []ReceiverServiceConfigurationProvider
+	callbacks                             map[string]Callback // cache?
+	spec1                                 *goopenrpcT.OpenRPCSpec1
+}
+
+func (r *ReflectedDocument) RegisterReceiver(receiver interface{}, provider ReceiverServiceConfigurationProvider) {
+	r.registerReceiverWithName("", receiver, provider)
+}
+
+func (d *ReflectedDocument) RegisterReceiverWithName(name string, receiver interface{}, provider ReceiverServiceConfigurationProvider) {
+	d.registerReceiverWithName(name, receiver, provider)
+}
+
+func (s *ReflectedDocument) registerReceiverWithName(name string, receiver interface{}, provider ReceiverServiceConfigurationProvider) {
+	if len(s.receiverNames) == 0 {
+		s.receiverNames = []string{}
+	}
+	if len(s.receiverServices) == 0 {
+		s.receiverServices = []interface{}{}
+	}
+	if len(s.receiverServiceConfigurationProviders) == 0 {
+		s.receiverServiceConfigurationProviders = []ReceiverServiceConfigurationProvider{}
+	}
+	s.receiverNames = append(s.receiverNames, name)
+	s.receiverServices = append(s.receiverServices, receiver)
+	s.receiverServiceConfigurationProviders = append(s.receiverServiceConfigurationProviders, provider)
+}
+
+func (r *ReflectedDocument) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
+	if r.spec1 != nil {
+		return r.spec1, nil
+	}
+
+	if r == nil || r.receiverServiceConfigurationProviders == nil {
+		return nil, errors.New("server provider undefined")
+	}
+
+	r.spec1 = NewSpec()
+
+	r.spec1.Info = r.rpcServerServiceProvider.OpenRPCInfo()
+	if eDocs := r.rpcServerServiceProvider.OpenRPCExternalDocs(); eDocs != nil {
+		r.spec1.ExternalDocs = *eDocs
+	}
+
+	// Set version by runtime, after parse.
+	spl := strings.Split(r.spec1.Info.Version, "+")
+	r.spec1.Info.Version = fmt.Sprintf("%s-%s-%d", spl[0], time.Now().Format(time.RFC3339), time.Now().Unix())
+
+	r.spec1.Methods = []goopenrpcT.Method{}
+
+	for i := 0; i < len(r.receiverNames); i++ {
+		receiverName := r.receiverNames[i]
+		receiverService := r.receiverServices[i]
+		serviceConfigurationProvider := r.receiverServiceConfigurationProviders[i]
+
+		methods := []goopenrpcT.Method{}
+
+		callbacks := serviceConfigurationProvider.Callbacks(receiverService)
+		for methodName, cb := range callbacks {
+			if isDiscoverMethodBlacklisted(serviceConfigurationProvider.ParseOptions(), methodName) {
+				continue
+			}
+
+			// Get fully qualified method name.
+			methodName = serviceConfigurationProvider.MethodName(receiverService, receiverName, methodName)
+
+			// Get method
+			m, err := serviceConfigurationProvider.CallbackToMethod(serviceConfigurationProvider.ParseOptions(), methodName, cb)
+			if err == errParseCallbackAutoGenerate {
+				continue
+			}
+			if m == nil || err != nil {
+				return nil, err
+			}
+
+			methods = append(methods, *m)
+		}
+
+		r.spec1.Methods = append(r.spec1.Methods, methods...)
+
+	}
+	sort.Slice(r.spec1.Methods, func(i, j int) bool {
+		return r.spec1.Methods[i].Name < r.spec1.Methods[j].Name
+	})
+
+	return r.spec1, nil
+}
+
+type StaticDocument struct {
+	raw []byte
+}
+
+func (s *StaticDocument) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
+	if len(s.raw) == 0 {
+		return nil, errors.New("missing raw document")
+	}
+	out := &goopenrpcT.OpenRPCSpec1{}
+	err := json.Unmarshal(s.raw, out)
+	return out, err
 }
 
 // Spec1 is a wrapped type around an openrpc schema document.
 type Document struct {
-	serverProvider ServiceProvider
-	parseOpts      *DocumentProviderParseOpts
-	spec1          *goopenrpcT.OpenRPCSpec1
+	Discoverer
+	Static    *StaticDocument
+	Reflector *ReflectedDocument
 }
 
-func (d *Document) Spec1() *goopenrpcT.OpenRPCSpec1 {
-	return d.spec1
-}
-
-// DocumentProvider initializes a Document type given a serverProvider (eg service or aggregate of services)
+// NewReflectDocument initializes a Document type given a receiverServiceConfigurationProviders (eg service or aggregate of services)
 // and options to use while parsing the runtime code into openrpc types.
-func DocumentProvider(serverProvider ServiceProvider, opts *DocumentProviderParseOpts) *Document {
-	if serverProvider == nil {
-		panic("openrpc-wrap-nil-serverprovider")
+func NewReflectDocument(serverProvider RPCServerServiceProvider) *Document {
+	d := &Document{}
+	d.Reflector = &ReflectedDocument{
+		rpcServerServiceProvider: serverProvider,
 	}
-	return &Document{serverProvider: serverProvider, parseOpts: opts}
+	return d
 }
 
-func (d *Document) Discover() (err error) {
-	if d == nil || d.serverProvider == nil {
-		return errors.New("server provider undefined")
-	}
-
-	if d.parseOpts == nil {
-		d.parseOpts = DefaultParseOptions()
-	}
-
-	// TODO: Caching?
-
-	d.spec1 = NewSpec()
-	d.spec1.Info = d.serverProvider.OpenRPCInfo()
-	if externalDocs := d.serverProvider.OpenRPCExternalDocs(); externalDocs != nil {
-		d.spec1.ExternalDocs = *externalDocs
-	}
-
-	// Set version by runtime, after parse.
-	spl := strings.Split(d.spec1.Info.Version, "+")
-	d.spec1.Info.Version = fmt.Sprintf("%s-%s-%d", spl[0], time.Now().Format(time.RFC3339), time.Now().Unix())
-
-	callbacks := d.serverProvider.Callbacks()
-	d.spec1.Methods = []goopenrpcT.Method{}
-
-	for k, cb := range callbacks {
-		if isDiscoverMethodBlacklisted(d.parseOpts, k) {
-			continue
-		}
-
-		m, err := d.serverProvider.CallbackToMethod(d.parseOpts, k, cb)
-		//m, err := d.GetMethod(k, cb)
-		if err == errParseCallbackAutoGenerate {
-			continue
-		}
-		if m == nil || err != nil {
-			return err
-		}
-
-		d.spec1.Methods = append(d.spec1.Methods, *m)
-	}
-	sort.Slice(d.spec1.Methods, func(i, j int) bool {
-		return d.spec1.Methods[i].Name < d.spec1.Methods[j].Name
-	})
-
-	//if d.parseOpts != nil && !d.parseOpts.Inline {
-	//	d.spec1.Components.Schemas = make(map[string]spec.Schema)
-	//}
-
-	// TODO: Flatten/Inline ContentDescriptors and Schemas
-
-	return nil
+func NewStaticDocument(input []byte) *Document {
+	d := &Document{}
+	d.Static = &StaticDocument{raw: input}
+	return d
 }
 
-func (d *Document) FlattenSchemas() *Document {
+func (d *Document) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
+	if d.Static != nil {
+		return d.Static.Discover()
+	} else if d.Reflector != nil {
+		return d.Reflector.Discover()
+	}
+	return nil, errors.New("empty document")
+}
+
+func (d *ReflectedDocument) FlattenSchemas() *ReflectedDocument {
 
 	d.documentMethodsSchemaMutation(func(s *spec.Schema) error {
 		id := schemaKey(*s)
@@ -167,11 +247,11 @@ func schemaKey(schema spec.Schema) string {
 	return fmt.Sprintf(`%s_%s_%x`, schema.Title, strings.Join(schema.Type, "+"), sum[:4])
 }
 
-func (d *Document) documentMethodsSchemaMutation(mut func(s *spec.Schema) error) {
+func (r *ReflectedDocument) documentMethodsSchemaMutation(mut func(s *spec.Schema) error) {
 	a := jst.NewAnalysisT()
-	for i := 0; i < len(d.spec1.Methods); i++ {
+	for i := 0; i < len(r.spec1.Methods); i++ {
 
-		met := d.spec1.Methods[i]
+		met := r.spec1.Methods[i]
 
 		// Params.
 		for ip := 0; ip < len(met.Params); ip++ {
@@ -183,54 +263,8 @@ func (d *Document) documentMethodsSchemaMutation(mut func(s *spec.Schema) error)
 		// Result (single).
 		a.WalkDepthFirst(&met.Result.Schema, mut)
 	}
-	//for k := range d.spec1.Components.ContentDescriptors {
-	//	cd := d.spec1.Components.ContentDescriptors[k]
-	//	a.WalkDepthFirst(&cd.Schema, mut)
-	//	d.spec1.Components.ContentDescriptors[k] = cd
-	//}
-	//for k := range d.spec1.Components.Schemas {
-	//	s := d.spec1.Components.Schemas[k]
-	//	a.WalkDepthFirst(&s, mut)
-	//	d.spec1.Components.Schemas[k] = s
-	//}
 }
 
-/*
-	TODO:
-	FlattenContentDescriptors is not yet possible without goopenrpc implementing
-	the alternative Reference and/or OneOf object spec.
-*/
-//func contentDescriptorKey(cd *goopenrpcT.ContentDescriptor) string {
-//	b, _ := json.Marshal(cd)
-//	sum := sha1.Sum(b)
-//	return fmt.Sprintf(`%s_%x`, cd.Name, sum[:4])
-//}
-//func (d *Document) FlattenContentDescriptors() *Document {
-//
-//	// Assume d.spec1.ContentDescriptors is initialized.
-//	for i, m := range d.spec1.Methods {
-//		for j, cd := range m.Params {
-//			id := contentDescriptorKey(cd)
-//			d.spec1.Components.ContentDescriptors[id] = cd
-//
-//			cp := &goopenrpcT.ContentDescriptor{}
-//			cp.Content.Schema.Ref = spec.Ref{
-//				Ref: jsonreference.MustCreateRef("#/components/contentDescriptors/" + id),
-//			}
-//			m.Params[j] = cp
-//		}
-//		id := contentDescriptorKey(m.Result)
-//		d.spec1.Components.ContentDescriptors[id] = m.Result
-//		cp := &goopenrpcT.ContentDescriptor{}
-//		cp.Content.Schema.Ref = spec.Ref{
-//			Ref: jsonreference.MustCreateRef("#/components/contentDescriptors/" + id),
-//		}
-//		m.Result = cp
-//		d.spec1.Methods[i] = m
-//	}
-//	return d
-//}
-
-func (d *Document) Inline() *Document {
+func (d *ReflectedDocument) Inline() *Document {
 	return nil
 }

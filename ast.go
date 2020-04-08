@@ -75,28 +75,25 @@ func expandASTField(f *ast.Field) []*NamedField {
 		the returns to include all iterations.
 	*/
 
-	// If the field is unnamed, then set from the type.
-	defaultFName := fmt.Sprintf(`%s`, f.Type)
-
-	fNames := []string{}
-	if len(f.Names) > 0 {
-		for _, fName := range f.Names {
-			if fName == nil {
-				panic("nil-fname")
-			}
-			fNames = append(fNames, fName.Name)
-			if fName.Obj != nil {
-			}
-		}
-	} else {
-		fNames = append(fNames, defaultFName)
+	defaultName := fmt.Sprintf("%s", f.Type)
+	switch t := f.Type.(type) {
+	case *ast.StarExpr:
+	defaultName = fmt.Sprintf("%s", t.X)
 	}
 
-	for _, name := range fNames {
+	if len(f.Names) == 0 {
 		out = append(out, &NamedField{
-			Name:  name,
+			Name:  defaultName,
+			Field: f,
+		})
+		return out
+	}
+	for _, ident := range f.Names {
+		out = append(out, &NamedField{
+			Name:  ident.Name,
 			Field: f,
 		})
 	}
+
 	return out
 }

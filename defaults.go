@@ -1,10 +1,15 @@
 package openrpc_go_document
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"go/ast"
 	"reflect"
 	"regexp"
+	"unicode"
 
+	"github.com/alecthomas/jsonschema"
 	"github.com/go-openapi/spec"
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
@@ -18,24 +23,53 @@ func DefaultParseOptions() *DocumentProviderParseOpts {
 		},
 		ContentDescriptorMutationFns: nil,
 		MethodBlackList:              nil,
-		TypeMapper:                   nil,
-		SchemaIgnoredTypes:           nil,
-		ContentDescriptorSkipFn:      nil,
+		TypeMapper: func(r reflect.Type) *jsonschema.Type {
+
+			// Handle interface{}, which can be anything.
+			if isEmptyInterfaceType(r) {
+				return &jsonschema.Type{
+					OneOf: []*jsonschema.Type{
+						{Type: "array"},
+						{Type: "object"},
+						{Type: "string"},
+						{Type: "number"},
+						{Type: "integer"},
+						{Type: "boolean"},
+						{Type: "null"},
+					},
+				}
+			}
+			return nil
+		},
+		SchemaIgnoredTypes:      nil,
+		ContentDescriptorSkipFn: nil,
 	}
 }
 
+var DefaultServerServiceProvider = &RPCServerServiceProviderService{
+	ServiceOpenRPCInfoFn: func() goopenrpcT.Info { return goopenrpcT.Info{} },
+	ServiceOpenRPCExternalDocsFn: func() *goopenrpcT.ExternalDocs {
+		return &goopenrpcT.ExternalDocs{
+			Description: "GPLv3",
+			URL:         "https://github.com/ethereum/go-ethereum/blob/COPYING.md",
+		}
+	},
+}
+
+var nullSchema = spec.Schema{
+	SchemaProps: spec.SchemaProps{
+		Type: []string{"null"},
+	}}
+
 var nullContentDescriptor = &goopenrpcT.ContentDescriptor{
 	Content: goopenrpcT.Content{
-		Name: "Null",
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Type: []string{"null"},
-			},
-		},
+		Name:   "Null",
+		Schema: nullSchema,
 	},
 }
 
 type NoReceiverT interface{}
+
 var NoReceiver = reflect.TypeOf(((*NoReceiverT)(nil))).Elem()
 var NoReceiverValue = reflect.ValueOf(new(NoReceiverT))
 
@@ -83,7 +117,12 @@ func SchemaMutationRemoveDefinitionsField(s *spec.Schema) error {
 }
 
 func SchemaMutationExpand(s *spec.Schema) error {
-	return spec.ExpandSchema(s, s, nil)
+	err := spec.ExpandSchema(s, s, nil)
+	if err != nil {
+		b, _ := json.MarshalIndent(s, "", "  ")
+		return fmt.Errorf("schema Expand mutation error: %v schema:\n%s", err, string(b))
+	}
+	return nil
 }
 
 func SchemaMutationRequireDefaultOn(s *spec.Schema) error {
@@ -96,112 +135,6 @@ func SchemaMutationRequireDefaultOn(s *spec.Schema) error {
 	}
 	return nil
 }
-//
-////// GoRPCServiceMethods gets the methods available following the standard rpc library
-////// pattern. Receiver type names are joined to method type names by a dot.
-////func GoRPCServiceMethods(service interface{}) func() map[string]Callback {
-////	return func() map[string]Callback {
-////
-////		result := make(map[string]Callback)
-////
-////		rcvr := reflect.ValueOf(service)
-////		fmt.Println("rcvr val", rcvr)
-////
-////		for n := 0; n < rcvr.NumMethod(); n++ {
-////			m := reflect.TypeOf(service).Method(n)
-////			methodName := rcvr.Elem().Type().Name() + "." + m.Name
-////			result[methodName] = Callback{reflect.ValueOf(service), m.Func}
-////		}
-////		return result
-////	}
-////}
-////
-////func GoEthereumSuitableCallbacks(receiver reflect.Value) map[string]Callback {
-////	typ := receiver.Type()
-////	callbacks := make(map[string]Callback)
-////	for m := 0; m < typ.NumMethod(); m++ {
-////		method := typ.Method(m)
-////		if method.PkgPath != "" {
-////			continue // method not exported
-////		}
-////		cb := newCallback(receiver, method.Func)
-////		if cb == nil {
-////			continue // function invalid
-////		}
-////		name := formatName(method.Name)
-////		callbacks[name] = cb
-////	}
-////	return callbacks
-////}
-//
-//// newCallback turns fn (a function) into a ethereumCallback object. It returns nil if the function
-//// is unsuitable as an RPC ethereumCallback.
-//func newCallback(receiver, fn reflect.Value) *ethereumCallback {
-//	fntype := fn.Type()
-//	c := &ethereumCallback{fn: fn, rcvr: receiver, errPos: -1, isSubscribe: isPubSub(fntype)}
-//	// Determine parameter types. They must all be exported or builtin types.
-//	c.makeArgTypes()
-//
-//	// Verify return types. The function must return at most one error
-//	// and/or one other non-error value.
-//	outs := make([]reflect.Type, fntype.NumOut())
-//	for i := 0; i < fntype.NumOut(); i++ {
-//		outs[i] = fntype.Out(i)
-//	}
-//	if len(outs) > 2 {
-//		return nil
-//	}
-//	// If an error is returned, it must be the last returned value.
-//	switch {
-//	case len(outs) == 1 && isErrorType(outs[0]):
-//		c.errPos = 0
-//	case len(outs) == 2:
-//		if isErrorType(outs[0]) || !isErrorType(outs[1]) {
-//			return nil
-//		}
-//		c.errPos = 1
-//	}
-//	return c
-//}
-//
-//// formatName converts to first character of name to lowercase.
-//func formatName(name string) string {
-//	ret := []rune(name)
-//	if len(ret) > 0 {
-//		ret[0] = unicode.ToLower(ret[0])
-//	}
-//	return string(ret)
-//}
-//
-//
-//func defaultContentDescriptorSkip(isArgs bool, index int, cd *goopenrpcT.ContentDescriptor) bool {
-//	if isArgs {
-//		if cd.Schema.Description == "context.Context" {
-//			return true
-//		}
-//	}
-//	return false
-//}
-//
-//func documentValHasContext(rcvr reflect.Value, val reflect.Value) bool {
-//	fntype := val.Type()
-//	// Skip receiver and context.Context parameter (if present).
-//	firstArg := 0
-//	if rcvr.IsValid() && !rcvr.IsNil() {
-//		firstArg++
-//	}
-//	return fntype.NumIn() > firstArg && fntype.In(firstArg) == contextType
-//}
-
-/*
-	These following functions summary, description, etc.
-	should maybe be overrideable or configurable...
-	The general idea is that we're just mapping a base couple data
-	types that we have available (reflect, runtime, ast) onto
-	the method, content descriptor, or schema.
-	As is, these are hardcoded opinions about how to handle these mappings
-	from "introspected" values (reflect, runtime, ast) onto a data structure.
-*/
 
 func methodSummary(fdecl *ast.FuncDecl) string {
 	if fdecl.Doc != nil {
@@ -209,6 +142,7 @@ func methodSummary(fdecl *ast.FuncDecl) string {
 	}
 	return ""
 }
+
 func methodDeprecated(fdecl *ast.FuncDecl) bool {
 	matched, _ := regexp.MatchString(`(?im)deprecated`, methodSummary(fdecl))
 	return matched
@@ -223,4 +157,47 @@ func isDiscoverMethodBlacklisted(d *DocumentProviderParseOpts, name string) bool
 		}
 	}
 	return false
+}
+
+var (
+	contextType = reflect.TypeOf((*context.Context)(nil)).Elem()
+	errorType   = reflect.TypeOf((*error)(nil)).Elem()
+)
+
+func isEmptyInterfaceType(ty reflect.Type) bool {
+	if ty.Kind() == reflect.Ptr {
+		ty = ty.Elem()
+	}
+	switch ty.Kind() {
+	case reflect.Interface:
+		if ty.NumMethod() == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// Is t context.Context or *context.Context?
+func isContextType(t reflect.Type) bool {
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t == contextTypeEthereum
+}
+
+// Does t satisfy the error interface?
+func isErrorType(t reflect.Type) bool {
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t.Implements(errorType)
+}
+
+// formatName converts to first character of name to lowercase.
+func formatEthereumName(name string) string {
+	ret := []rune(name)
+	if len(ret) > 0 {
+		ret[0] = unicode.ToLower(ret[0])
+	}
+	return string(ret)
 }

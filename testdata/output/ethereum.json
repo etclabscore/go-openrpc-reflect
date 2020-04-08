@@ -1,7 +1,7 @@
 {
   "openrpc": "1.2.4",
   "info": {
-    "title": "My Ethereum Service",
+    "title": "My Ethereum-Style Service",
     "description": "Oooohhh!",
     "termsOfService": "https://github.com/etclabscore/openrpc-go-document/blob/master/LICENSE.md",
     "contact": {
@@ -13,28 +13,93 @@
       "name": "",
       "url": ""
     },
-    "version": "v0.0.0-beta-2020-04-06T11:21:49-05:00-1586190109"
+    "version": "v0.0.0-beta-2020-04-08T05:32:48-05:00-1586341968"
   },
   "servers": [],
   "methods": [
     {
-      "name": "do",
+      "name": "myBasicService_getAll",
       "tags": [],
-      "summary": "Do is a very sparse mock method.\n",
-      "description": "`func(*openrpc_go_document.MyEthereumService, string)`",
+      "summary": "GetAll returns all the objects contained in state.\n",
+      "description": "```go\n// GetAll returns all the objects contained in state.\nfunc (m *MyBasicService) GetAll() (result []*MyBasicObject, err error) {\n\tm.mocking.setCalledWith(\"GetAll\")\n\tresult = []*MyBasicObject{}\n\tfor _, v := range m.stateFullData {\n\t\tresult = append(result, v)\n\t}\n\treturn result, nil\n}\n```",
       "externalDocs": {
-        "description": "line=51",
+        "description": "line=62",
+        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+      },
+      "params": [],
+      "result": {
+        "name": "result",
+        "summary": "",
+        "description": "```go\n\n```",
+        "required": true,
+        "deprecated": false,
+        "schema": {
+          "$ref": "#/components/schemas/__3b899de2"
+        }
+      },
+      "deprecated": false,
+      "servers": [],
+      "errors": [],
+      "links": [],
+      "paramStructure": "by-position",
+      "examples": []
+    },
+    {
+      "name": "myBasicService_getDisguisedName",
+      "tags": [],
+      "summary": "GetDisguisedName gets a sort-of disguised name for a user.\n",
+      "description": "```go\n// GetDisguisedName gets a sort-of disguised name for a user.\nfunc (m *MyBasicService) GetDisguisedName(name string) (disguise string, err error) {\n\tm.mocking.setCalledWith(\"EncodedName\", name)\n\tif v, ok := m.stateFullData[name]; !ok {\n\t\treturn \"\", errors.New(\"no object by that name\")\n\t} else {\n\t\tsum := sha1.Sum([]byte(v.Name))\n\t\treturn fmt.Sprintf(`%s, aka %x`, v.Name, sum[:4]), nil\n\t}\n}\n```",
+      "externalDocs": {
+        "description": "line=82",
         "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
       },
       "params": [
         {
-          "name": "string",
+          "name": "name",
           "summary": "",
-          "description": "string",
+          "description": "```go\nstring\n```",
           "required": true,
           "deprecated": false,
           "schema": {
             "$ref": "#/components/schemas/_string_5116c2a2"
+          }
+        }
+      ],
+      "result": {
+        "name": "disguise",
+        "summary": "",
+        "description": "```go\nstring\n```",
+        "required": true,
+        "deprecated": false,
+        "schema": {
+          "$ref": "#/components/schemas/_string_5116c2a2"
+        }
+      },
+      "deprecated": false,
+      "servers": [],
+      "errors": [],
+      "links": [],
+      "paramStructure": "by-position",
+      "examples": []
+    },
+    {
+      "name": "myBasicService_operateOnExternalType",
+      "tags": [],
+      "summary": "OperateOnExternalType accepts a type imported from another package as it's argument.\n",
+      "description": "```go\n// OperateOnExternalType accepts a type imported from another package as it's argument.\nfunc (m *MyBasicService) OperateOnExternalType(externalObject *goopenrpcT.ExamplePairing) error {\n\n\treturn nil\n}\n```",
+      "externalDocs": {
+        "description": "line=95",
+        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+      },
+      "params": [
+        {
+          "name": "externalObject",
+          "summary": "",
+          "description": "```go\ngithub.com/gregdhill/go-openrpc/types.*ExamplePairing\n```",
+          "required": true,
+          "deprecated": false,
+          "schema": {
+            "$ref": "#/components/schemas/__58c9255f"
           }
         }
       ],
@@ -45,7 +110,7 @@
         "required": false,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/_null_c61c2295"
+          "$ref": "#/components/schemas/__b7aa7993"
         }
       },
       "deprecated": false,
@@ -56,74 +121,37 @@
       "examples": []
     },
     {
-      "name": "fetch",
+      "name": "myBasicService_set",
       "tags": [],
-      "summary": "Fetch is a mock method.\n",
-      "description": "`func(*openrpc_go_document.MyEthereumService) (*openrpc_go_document.MyVal, error)`",
+      "summary": "Set places a value in state.\n",
+      "description": "```go\n// Set places a value in state.\nfunc (m *MyBasicService) Set(value MyBasicObject) (err error) {\n\tm.mocking.setCalledWith(\"Set\", value)\n\tif m.stateFullData == nil {\n\t\tm.stateFullData = make(map[string]*MyBasicObject)\n\t}\n\tm.stateFullData[value.Name] = \u0026value\n\treturn nil\n}\n```",
       "externalDocs": {
-        "description": "line=44",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
-      },
-      "params": [],
-      "result": {
-        "name": "result",
-        "summary": "",
-        "description": "github.com/etclabscore/openrpc-go-document.MyVal",
-        "required": true,
-        "deprecated": false,
-        "schema": {
-          "$ref": "#/components/schemas/_object_d4087fc4"
-        }
-      },
-      "deprecated": false,
-      "servers": [],
-      "errors": [],
-      "links": [],
-      "paramStructure": "by-position",
-      "examples": []
-    },
-    {
-      "name": "make",
-      "tags": [],
-      "summary": "Make is a busy method with lots of comments.\nMore notes. Is Deprecated.\n",
-      "description": "`func(*openrpc_go_document.MyEthereumService, context.Context, string, *big.Int) (openrpc_go_document.MyVal, error)`",
-      "externalDocs": {
-        "description": "line=55",
+        "description": "line=72",
         "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
       },
       "params": [
         {
-          "name": "name",
+          "name": "value",
           "summary": "",
-          "description": "string",
+          "description": "```go\ngithub.com/etclabscore/openrpc-go-document.MyBasicObject\n```",
           "required": true,
           "deprecated": false,
           "schema": {
-            "$ref": "#/components/schemas/_string_5116c2a2"
-          }
-        },
-        {
-          "name": "cellsN",
-          "summary": "",
-          "description": "math/big.Int",
-          "required": true,
-          "deprecated": false,
-          "schema": {
-            "$ref": "#/components/schemas/_object_88b0fee6"
+            "$ref": "#/components/schemas/_object_89615155"
           }
         }
       ],
       "result": {
-        "name": "myResult",
+        "name": "Null",
         "summary": "",
-        "description": "github.com/etclabscore/openrpc-go-document.MyVal",
-        "required": true,
+        "description": "",
+        "required": false,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/_object_d4087fc4"
+          "$ref": "#/components/schemas/__b7aa7993"
         }
       },
-      "deprecated": true,
+      "deprecated": false,
       "servers": [],
       "errors": [],
       "links": [],
@@ -133,6 +161,70 @@
   ],
   "components": {
     "schemas": {
+      "__3b899de2": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/_array_2ed05e8f"
+          },
+          {
+            "$ref": "#/components/schemas/_null_c61c2295"
+          }
+        ]
+      },
+      "__3f7be866": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/_array_7c658fd1"
+          },
+          {
+            "$ref": "#/components/schemas/_object_fe90370d"
+          },
+          {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          {
+            "$ref": "#/components/schemas/_number_caa7697b"
+          },
+          {
+            "$ref": "#/components/schemas/_integer_4df23f6f"
+          },
+          {
+            "$ref": "#/components/schemas/_boolean_420dffc4"
+          },
+          {
+            "$ref": "#/components/schemas/_null_c61c2295"
+          }
+        ]
+      },
+      "__58c9255f": {
+        "description": "github.com/gregdhill/go-openrpc/types.*ExamplePairing",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/_object_7c7fcb99"
+          },
+          {
+            "$ref": "#/components/schemas/_null_c61c2295"
+          }
+        ]
+      },
+      "__b7aa7993": {
+        "$ref": "#/components/schemas/_null_c61c2295"
+      },
+      "_array_2ed05e8f": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/_object_89615155"
+        }
+      },
+      "_array_39b66d3a": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/_object_fe674ae2"
+        }
+      },
+      "_array_7c658fd1": {
+        "type": "array"
+      },
       "_boolean_420dffc4": {
         "type": "boolean"
       },
@@ -142,13 +234,31 @@
       "_null_c61c2295": {
         "type": "null"
       },
-      "_object_88b0fee6": {
-        "description": "math/big.Int",
+      "_number_caa7697b": {
+        "type": "number"
+      },
+      "_object_7c7fcb99": {
         "type": "object",
+        "properties": {
+          "description": {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          "name": {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          "params": {
+            "$ref": "#/components/schemas/_array_39b66d3a"
+          },
+          "result": {
+            "$ref": "#/components/schemas/_object_fe674ae2"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          }
+        },
         "additionalProperties": false
       },
-      "_object_d4087fc4": {
-        "description": "github.com/etclabscore/openrpc-go-document.MyVal",
+      "_object_89615155": {
         "type": "object",
         "required": [
           "Name",
@@ -174,6 +284,30 @@
       "_object_d9873742": {
         "type": "object",
         "additionalProperties": false
+      },
+      "_object_fe674ae2": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          "externalValue": {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          "name": {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          "value": {
+            "$ref": "#/components/schemas/__3f7be866"
+          }
+        },
+        "additionalProperties": false
+      },
+      "_object_fe90370d": {
+        "type": "object"
       },
       "_string_5116c2a2": {
         "description": "string",

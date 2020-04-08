@@ -1,8 +1,6 @@
 package openrpc_go_document
 
 import (
-	"bufio"
-	"bytes"
 	"crypto/sha1"
 	"encoding/json"
 	"errors"

@@ -212,7 +212,7 @@ func TestDocument_Discover(t *testing.T) {
 		// Get our document provider from the serviceProvider.
 		serverDoc := NewReflectDocument(serverConfigurationP)
 
-		rp := DefaultEthereumServiceProvider
+		rp := EthereumRPCDescriptor
 		serverDoc.Reflector.RegisterReceiver(ethereumService, rp)
 
 
@@ -275,7 +275,7 @@ func TestDocument_Discover(t *testing.T) {
 
 		// Get the service provider default for our RPC API style,
 		// in this case, the Go standard lib.
-		sp := DefaultStandardServiceProvider
+		sp := StandardRPCDescriptor
 
 		// Register our receiver-based service standardService.
 		serverDoc.Reflector.RegisterReceiver(standardService, sp)

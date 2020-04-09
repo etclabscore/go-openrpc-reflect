@@ -1,4 +1,4 @@
-package openrpc_go_document
+package go_openrpc_document
 
 import (
 	"crypto/sha1"

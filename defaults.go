@@ -51,12 +51,14 @@ func DefaultParseOptions() *DocumentProviderParseOpts {
 	}
 }
 
+// DefaultServerServiceProvider instantiates default non-zero settings
+// for a server descriptor.
 var DefaultServerServiceProvider = &ServerDescriptorT{
 	ServiceOpenRPCInfoFn: func() goopenrpcT.Info { return goopenrpcT.Info{} },
 	ServiceOpenRPCExternalDocsFn: func() *goopenrpcT.ExternalDocs {
 		return &goopenrpcT.ExternalDocs{
-			Description: "GPLv3",
-			URL:         "https://github.com/ethereum/go-ethereum/blob/COPYING.md",
+			Description: "Placeholder",
+			URL:         "https://example.com",
 		}
 	},
 }
@@ -226,4 +228,3 @@ func isErrorType(t reflect.Type) bool {
 	}
 	return t.Implements(errorType)
 }
-

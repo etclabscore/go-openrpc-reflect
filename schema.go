@@ -24,7 +24,7 @@ func typeToSchema(opts *DocumentProviderParseOpts, ty reflect.Type) spec.Schema 
 			},
 		}
 	}
-
+	
 	rflctr := jsonschema.Reflector{
 		AllowAdditionalProperties:  false,
 		RequiredFromJSONSchemaTags: true,
@@ -76,4 +76,21 @@ func fullTypeDescription(ty reflect.Type) string {
 		return fmt.Sprintf("%s.%s", pack, out)
 	}
 	return out
+}
+
+func jsonschemaPkgSupport(r reflect.Type) bool {
+	switch r.Kind() {
+	case reflect.Struct,
+		reflect.Map,
+		reflect.Slice, reflect.Array,
+		reflect.Interface,
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.Bool,
+		reflect.String,
+		reflect.Ptr:
+		return true
+	default:
+		return false
+	}
 }

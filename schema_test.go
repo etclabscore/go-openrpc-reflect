@@ -12,8 +12,8 @@ func TestFullTypeDescription(t *testing.T) {
 	cases := map[reflect.Type]string{
 		reflect.TypeOf(uint(0)): "uint",
 		reflect.TypeOf(new(uint)): "*uint",
-		reflect.TypeOf(new(mystruct)): "github.com/etclabscore/openrpc-go-document.*mystruct",
-		reflect.TypeOf(mystruct{}): "github.com/etclabscore/openrpc-go-document.mystruct",
+		reflect.TypeOf(new(mystruct)): "github.com/etclabscore/go-openrpc-reflect.*mystruct",
+		reflect.TypeOf(mystruct{}): "github.com/etclabscore/go-openrpc-reflect.mystruct",
 	}
 
 	for k, v := range cases {

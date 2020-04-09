@@ -1,10 +1,14 @@
 package go_openrpc_reflect
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
+	"go/token"
 	"regexp"
 	"runtime"
+
+	"go/printer"
 )
 
 type NamedField struct {
@@ -54,6 +58,14 @@ func documentGetAstFunc(f Callback, astFile *ast.File, rf *runtime.Func) *ast.Fu
 	return nil
 }
 
+func printIdentField(f *ast.Field) string {
+	b := []byte{}
+	buf := bytes.NewBuffer(b)
+	fs := token.NewFileSet()
+	printer.Fprint(buf, fs, f.Type.(ast.Node))
+	return buf.String()
+}
+
 func expandASTField(f *ast.Field) []*NamedField {
 	if f == nil {
 		return nil
@@ -61,29 +73,9 @@ func expandASTField(f *ast.Field) []*NamedField {
 
 	out := []*NamedField{}
 
-	/*
-		Names can be like from the following
-
-		func add(a, b int, base uint)
-		func add(a int, b int, base uint)
-		func add(int, int, uint)
-
-		So we need to collect them all for each field (eg int), with default names
-		in case they're unnamed.
-
-		In case a field has multiple names, we need to expand
-		the returns to include all iterations.
-	*/
-
-	defaultName := fmt.Sprintf("%s", f.Type)
-	switch t := f.Type.(type) {
-	case *ast.StarExpr:
-	defaultName = fmt.Sprintf("%s", t.X)
-	}
-
 	if len(f.Names) == 0 {
 		out = append(out, &NamedField{
-			Name:  defaultName,
+			Name:  printIdentField(f),
 			Field: f,
 		})
 		return out
@@ -94,6 +86,5 @@ func expandASTField(f *ast.Field) []*NamedField {
 			Field: f,
 		})
 	}
-
 	return out
 }

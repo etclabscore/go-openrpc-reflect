@@ -158,8 +158,6 @@ func makeEthereumMethod(opts *DocumentProviderParseOpts, name string, pcb *parse
 				if err := a.WalkDepthFirst(&sch, mutation); err != nil {
 					return nil, fmt.Errorf("schema mutation error: %v", err)
 				}
-				//if err := mutation(&sch); err != nil {
-				//}
 			}
 		}
 		summary := astNamedField.Field.Comment.Text()
@@ -169,7 +167,7 @@ func makeEthereumMethod(opts *DocumentProviderParseOpts, name string, pcb *parse
 		return &goopenrpcT.ContentDescriptor{
 			Content: goopenrpcT.Content{
 				Name:        astNamedField.Name,
-				Summary:     astNamedField.Field.Comment.Text(),
+				Summary:     summary,
 				Required:    true,
 				Description: fmt.Sprintf("```go\n%s\n```", fullTypeDescription(ty)),
 				Schema:      sch,

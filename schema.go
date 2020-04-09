@@ -12,7 +12,7 @@ import (
 
 func typeToSchema(opts *DocumentProviderParseOpts, ty reflect.Type) spec.Schema {
 	if !jsonschemaPkgSupport(ty) {
-		panic("FIXME")
+		log.Fatalf("typeToSchema met unsupported type %v", ty)
 	}
 
 	rflctr := jsonschema.Reflector{

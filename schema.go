@@ -12,7 +12,17 @@ import (
 
 func typeToSchema(opts *DocumentProviderParseOpts, ty reflect.Type) spec.Schema {
 	if !jsonschemaPkgSupport(ty) {
-		log.Fatalf("typeToSchema met unsupported type %v", ty)
+		desc := ty.Name()
+		if ty.Kind() == reflect.Ptr {
+			desc = ty.Elem().Name()
+		}
+		return spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type:        []string{"object"},
+				Title:       "<unknown>",
+				Description: desc,
+			},
+		}
 	}
 
 	rflctr := jsonschema.Reflector{

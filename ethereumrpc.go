@@ -8,7 +8,7 @@ import (
 	"unicode"
 
 	"github.com/davecgh/go-spew/spew"
-	go_jsonschema_traverse "github.com/etclabscore/go-jsonschema-traverse"
+	go_jsonschema_walk "github.com/etclabscore/go-jsonschema-walk"
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
 
@@ -154,7 +154,7 @@ func makeEthereumMethod(opts *DocumentProviderParseOpts, name string, pcb *parse
 		sch := typeToSchema(opts, ty)
 		if opts != nil && len(opts.SchemaMutationFns) > 0 {
 			for _, mutation := range opts.SchemaMutationFns {
-				a := go_jsonschema_traverse.NewAnalysisT()
+				a := go_jsonschema_walk.NewAnalysisT()
 				if err := a.WalkDepthFirst(&sch, mutation); err != nil {
 					return nil, fmt.Errorf("schema mutation error: %v", err)
 				}

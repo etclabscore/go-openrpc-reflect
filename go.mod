@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/alecthomas/jsonschema v0.0.2
 	github.com/davecgh/go-spew v1.1.1
-	github.com/etclabscore/go-jsonschema-walk v0.0.4
+	github.com/etclabscore/go-jsonschema-walk v0.0.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.3
 	github.com/go-openapi/spec v0.19.7
 	github.com/gregdhill/go-openrpc v0.0.1

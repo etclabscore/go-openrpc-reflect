@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/alecthomas/jsonschema"
-	jst "github.com/etclabscore/go-jsonschema-traverse"
+	jst "github.com/etclabscore/go-jsonschema-walk"
 	"github.com/go-openapi/jsonreference"
 	"github.com/go-openapi/spec"
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"

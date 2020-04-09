@@ -13,7 +13,7 @@
       "name": "",
       "url": ""
     },
-    "version": "v0.0.0-beta-2020-04-08T14:10:08-05:00-1586373008"
+    "version": "v0.0.0-beta-2020-04-09T06:00:02-05:00-1586430002"
   },
   "servers": [],
   "methods": [
@@ -24,7 +24,7 @@
       "description": "```go\n// GetAll returns all the objects contained in state.\nfunc (m *MyBasicService) GetAll() (result []*MyBasicObject, err error) {\n\tm.mocking.setCalledWith(\"GetAll\")\n\tresult = []*MyBasicObject{}\n\tfor _, v := range m.stateFullData {\n\t\tresult = append(result, v)\n\t}\n\treturn result, nil\n}\n```",
       "externalDocs": {
         "description": "line=62",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+        "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
       },
       "params": [],
       "result": {
@@ -51,7 +51,7 @@
       "description": "```go\n// GetDisguisedName gets a sort-of disguised name for a user.\nfunc (m *MyBasicService) GetDisguisedName(name string) (disguise string, err error) {\n\tm.mocking.setCalledWith(\"EncodedName\", name)\n\tif v, ok := m.stateFullData[name]; !ok {\n\t\treturn \"\", errors.New(\"no object by that name\")\n\t} else {\n\t\tsum := sha1.Sum([]byte(v.Name))\n\t\treturn fmt.Sprintf(`%s, aka %x`, v.Name, sum[:4]), nil\n\t}\n}\n```",
       "externalDocs": {
         "description": "line=82",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+        "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
       },
       "params": [
         {
@@ -89,7 +89,7 @@
       "description": "```go\n// OperateOnExternalType accepts a type imported from another package as it's argument.\nfunc (m *MyBasicService) OperateOnExternalType(externalObject *goopenrpcT.ExamplePairing) error {\n\n\treturn nil\n}\n```",
       "externalDocs": {
         "description": "line=95",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+        "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
       },
       "params": [
         {
@@ -127,13 +127,13 @@
       "description": "```go\n// Set places a value in state.\nfunc (m *MyBasicService) Set(value MyBasicObject) (err error) {\n\tm.mocking.setCalledWith(\"Set\", value)\n\tif m.stateFullData == nil {\n\t\tm.stateFullData = make(map[string]*MyBasicObject)\n\t}\n\tm.stateFullData[value.Name] = \u0026value\n\treturn nil\n}\n```",
       "externalDocs": {
         "description": "line=72",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+        "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
       },
       "params": [
         {
           "name": "value",
           "summary": "",
-          "description": "```go\ngithub.com/etclabscore/openrpc-go-document.MyBasicObject\n```",
+          "description": "```go\ngithub.com/etclabscore/go-openrpc-reflect.MyBasicObject\n```",
           "required": true,
           "deprecated": false,
           "schema": {

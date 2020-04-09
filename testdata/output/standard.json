@@ -13,7 +13,7 @@
       "name": "",
       "url": ""
     },
-    "version": "v0.0.0-beta-2020-04-08T14:10:08-05:00-1586373008"
+    "version": "v0.0.0-beta-2020-04-09T06:00:02-05:00-1586430002"
   },
   "servers": [],
   "methods": [
@@ -24,28 +24,28 @@
       "description": "```go\n// GetAll is an RPC wrapper method around the MyBasicService `GetAll` method.\nfunc (rpc *MyBasicServiceRPC) GetAll(arg GetAllArg, reply *GetAllReply) error {\n\trpc.mocking.setCalledWith(\"GetAll\", arg)\n\tgot, err := rpc.base.GetAll()\n\tif err != nil {\n\t\treturn err\n\t}\n\t*reply = got\n\treturn nil\n}\n```",
       "externalDocs": {
         "description": "line=115",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+        "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
       },
       "params": [
         {
           "name": "arg",
           "summary": "",
-          "description": "```go\ngithub.com/etclabscore/openrpc-go-document.GetAllArg\n```",
+          "description": "```go\ngithub.com/etclabscore/go-openrpc-reflect.GetAllArg\n```",
           "required": true,
           "deprecated": false,
           "schema": {
-            "$ref": "#/components/schemas/__bf292df3"
+            "$ref": "#/components/schemas/__54b91366"
           }
         }
       ],
       "result": {
         "name": "reply",
         "summary": "",
-        "description": "```go\ngithub.com/etclabscore/openrpc-go-document.*GetAllReply\n```",
+        "description": "```go\ngithub.com/etclabscore/go-openrpc-reflect.*GetAllReply\n```",
         "required": true,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/__0deac778"
+          "$ref": "#/components/schemas/__d9004654"
         }
       },
       "deprecated": false,
@@ -62,7 +62,7 @@
       "description": "```go\n// GetDisguisedName is also a wrapper method.\nfunc (rpc *MyBasicServiceRPC) GetDisguisedName(name string, reply *GetDisguisedNameReply) error {\n\trpc.mocking.setCalledWith(\"GetDisguisedName\", name)\n\tname, err := rpc.base.GetDisguisedName(name)\n\tif err != nil {\n\t\treturn err\n\t}\n\t*reply = GetDisguisedNameReply(name)\n\treturn nil\n}\n```",
       "externalDocs": {
         "description": "line=144",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+        "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
       },
       "params": [
         {
@@ -79,11 +79,11 @@
       "result": {
         "name": "reply",
         "summary": "",
-        "description": "```go\ngithub.com/etclabscore/openrpc-go-document.*GetDisguisedNameReply\n```",
+        "description": "```go\ngithub.com/etclabscore/go-openrpc-reflect.*GetDisguisedNameReply\n```",
         "required": true,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/__2f4500a9"
+          "$ref": "#/components/schemas/__67251846"
         }
       },
       "deprecated": false,
@@ -100,7 +100,7 @@
       "description": "```go\n// OperateOnExternalType accepts a type imported from another package as it's argument.\nfunc (m *MyBasicServiceRPC) OperateOnExternalType(arg *goopenrpcT.ExamplePairing, reply *OperateOnExternalTypeReply) error {\n\tm.mocking.setCalledWith(\"OperateOnExternalType\", arg)\n\treturn nil\n}\n```",
       "externalDocs": {
         "description": "line=156",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+        "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
       },
       "params": [
         {
@@ -117,11 +117,11 @@
       "result": {
         "name": "reply",
         "summary": "",
-        "description": "```go\ngithub.com/etclabscore/openrpc-go-document.*OperateOnExternalTypeReply\n```",
+        "description": "```go\ngithub.com/etclabscore/go-openrpc-reflect.*OperateOnExternalTypeReply\n```",
         "required": true,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/__55c20593"
+          "$ref": "#/components/schemas/__57e8ef1e"
         }
       },
       "deprecated": false,
@@ -138,13 +138,13 @@
       "description": "```go\n// Set is an RPC wrapper method.\nfunc (rpc *MyBasicServiceRPC) Set(arg SetArg, reply *SetReply) (err error) {\n\trpc.mocking.setCalledWith(\"Set\", arg)\n\terr = rpc.base.Set(MyBasicObject(arg))\n\treturn\n}\n```",
       "externalDocs": {
         "description": "line=134",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+        "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
       },
       "params": [
         {
           "name": "arg",
           "summary": "",
-          "description": "```go\ngithub.com/etclabscore/openrpc-go-document.SetArg\n```",
+          "description": "```go\ngithub.com/etclabscore/go-openrpc-reflect.SetArg\n```",
           "required": true,
           "deprecated": false,
           "schema": {
@@ -155,11 +155,11 @@
       "result": {
         "name": "reply",
         "summary": "",
-        "description": "```go\ngithub.com/etclabscore/openrpc-go-document.*SetReply\n```",
+        "description": "```go\ngithub.com/etclabscore/go-openrpc-reflect.*SetReply\n```",
         "required": true,
         "deprecated": false,
         "schema": {
-          "$ref": "#/components/schemas/__f6df146d"
+          "$ref": "#/components/schemas/__1a2f8f76"
         }
       },
       "deprecated": false,
@@ -176,7 +176,7 @@
       "description": "```go\n// ToggleInternalThing is an unobservable method without parameters; it uses neither args nor reply.\n// It has primitive types as arguments which you can set to arbitrary values.\nfunc (rpc *MyBasicServiceRPC) ToggleInternalThing(uint, *float64) error {\n\trpc.mocking.setCalledWith(\"ToggleInternalThing\")\n\treturn nil\n}\n```",
       "externalDocs": {
         "description": "line=125",
-        "url": "file:///home/ia/dev/etclabscore/openrpc-go-document/document_test.go"
+        "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
       },
       "params": [
         {
@@ -210,46 +210,10 @@
   ],
   "components": {
     "schemas": {
-      "__0deac778": {
+      "__1a2f8f76": {
         "oneOf": [
           {
-            "$ref": "#/components/schemas/_array_b48af085"
-          },
-          {
-            "$ref": "#/components/schemas/_null_c61c2295"
-          }
-        ]
-      },
-      "__235ee471": {
-        "description": "github.com/etclabscore/openrpc-go-document.*SetReply",
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/_array_7c658fd1"
-          },
-          {
-            "$ref": "#/components/schemas/_object_fe90370d"
-          },
-          {
-            "$ref": "#/components/schemas/_string_5b1cd571"
-          },
-          {
-            "$ref": "#/components/schemas/_number_caa7697b"
-          },
-          {
-            "$ref": "#/components/schemas/_integer_4df23f6f"
-          },
-          {
-            "$ref": "#/components/schemas/_boolean_420dffc4"
-          },
-          {
-            "$ref": "#/components/schemas/_null_c61c2295"
-          }
-        ]
-      },
-      "__2f4500a9": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/_string_9bb5f291"
+            "$ref": "#/components/schemas/__e33200d2"
           },
           {
             "$ref": "#/components/schemas/_null_c61c2295"
@@ -281,10 +245,46 @@
           }
         ]
       },
-      "__55c20593": {
+      "__54b91366": {
+        "description": "github.com/etclabscore/go-openrpc-reflect.GetAllArg",
         "oneOf": [
           {
-            "$ref": "#/components/schemas/__9c27c3e7"
+            "$ref": "#/components/schemas/_array_7c658fd1"
+          },
+          {
+            "$ref": "#/components/schemas/_object_fe90370d"
+          },
+          {
+            "$ref": "#/components/schemas/_string_5b1cd571"
+          },
+          {
+            "$ref": "#/components/schemas/_number_caa7697b"
+          },
+          {
+            "$ref": "#/components/schemas/_integer_4df23f6f"
+          },
+          {
+            "$ref": "#/components/schemas/_boolean_420dffc4"
+          },
+          {
+            "$ref": "#/components/schemas/_null_c61c2295"
+          }
+        ]
+      },
+      "__57e8ef1e": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/__8602f38b"
+          },
+          {
+            "$ref": "#/components/schemas/_null_c61c2295"
+          }
+        ]
+      },
+      "__67251846": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/_string_073f480f"
           },
           {
             "$ref": "#/components/schemas/_null_c61c2295"
@@ -311,8 +311,8 @@
           }
         ]
       },
-      "__9c27c3e7": {
-        "description": "github.com/etclabscore/openrpc-go-document.*OperateOnExternalTypeReply",
+      "__8602f38b": {
+        "description": "github.com/etclabscore/go-openrpc-reflect.*OperateOnExternalTypeReply",
         "oneOf": [
           {
             "$ref": "#/components/schemas/_array_7c658fd1"
@@ -337,8 +337,18 @@
           }
         ]
       },
-      "__bf292df3": {
-        "description": "github.com/etclabscore/openrpc-go-document.GetAllArg",
+      "__d9004654": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/_array_22aa3fe3"
+          },
+          {
+            "$ref": "#/components/schemas/_null_c61c2295"
+          }
+        ]
+      },
+      "__e33200d2": {
+        "description": "github.com/etclabscore/go-openrpc-reflect.*SetReply",
         "oneOf": [
           {
             "$ref": "#/components/schemas/_array_7c658fd1"
@@ -363,15 +373,12 @@
           }
         ]
       },
-      "__f6df146d": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/__235ee471"
-          },
-          {
-            "$ref": "#/components/schemas/_null_c61c2295"
-          }
-        ]
+      "_array_22aa3fe3": {
+        "description": "github.com/etclabscore/go-openrpc-reflect.*GetAllReply",
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/_object_89615155"
+        }
       },
       "_array_39b66d3a": {
         "type": "array",
@@ -381,13 +388,6 @@
       },
       "_array_7c658fd1": {
         "type": "array"
-      },
-      "_array_b48af085": {
-        "description": "github.com/etclabscore/openrpc-go-document.*GetAllReply",
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/_object_89615155"
-        }
       },
       "_boolean_420dffc4": {
         "type": "boolean"
@@ -481,15 +481,15 @@
       "_object_fe90370d": {
         "type": "object"
       },
+      "_string_073f480f": {
+        "description": "github.com/etclabscore/go-openrpc-reflect.*GetDisguisedNameReply",
+        "type": "string"
+      },
       "_string_5116c2a2": {
         "description": "string",
         "type": "string"
       },
       "_string_5b1cd571": {
-        "type": "string"
-      },
-      "_string_9bb5f291": {
-        "description": "github.com/etclabscore/openrpc-go-document.*GetDisguisedNameReply",
         "type": "string"
       }
     }

@@ -7,7 +7,6 @@ import (
 	"go/ast"
 	"reflect"
 	"regexp"
-	"unicode"
 
 	"github.com/alecthomas/jsonschema"
 	"github.com/go-openapi/spec"

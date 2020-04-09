@@ -8,7 +8,6 @@ import (
 	"unicode"
 
 	"github.com/davecgh/go-spew/spew"
-	go_jsonschema_walk "github.com/etclabscore/go-jsonschema-walk"
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
 
@@ -146,39 +145,10 @@ func makeEthereumMethod(opts *DocumentProviderParseOpts, name string, pcb *parse
 		}
 	}
 
-	description := func() string {
-		return fmt.Sprintf("```go\n%s\n```", string(pcb.printed))
-	}
-
-	contentDescriptor := func(ty reflect.Type, astNamedField *NamedField) (*goopenrpcT.ContentDescriptor, error) {
-		sch := typeToSchema(opts, ty)
-		if opts != nil && len(opts.SchemaMutationFns) > 0 {
-			for _, mutation := range opts.SchemaMutationFns {
-				a := go_jsonschema_walk.NewAnalysisT()
-				if err := a.WalkDepthFirst(&sch, mutation); err != nil {
-					return nil, fmt.Errorf("schema mutation error: %v", err)
-				}
-			}
-		}
-		summary := astNamedField.Field.Comment.Text()
-		if summary == "" {
-			summary = astNamedField.Field.Doc.Text()
-		}
-		return &goopenrpcT.ContentDescriptor{
-			Content: goopenrpcT.Content{
-				Name:        astNamedField.Name,
-				Summary:     summary,
-				Required:    true,
-				Description: fmt.Sprintf("```go\n%s\n```", fullTypeDescription(ty)),
-				Schema:      sch,
-			},
-		}, nil
-	}
-
 	params := func(skipFn func(isArgs bool, index int, ty reflect.Type, descriptor *goopenrpcT.ContentDescriptor) bool) ([]*goopenrpcT.ContentDescriptor, error) {
 		out := []*goopenrpcT.ContentDescriptor{}
 		for i, a := range argTypes {
-			cd, err := contentDescriptor(a, argASTFields[i])
+			cd, err := opts.contentDescriptor(a, argASTFields[i])
 			if err != nil {
 				return nil, err
 			}
@@ -196,7 +166,7 @@ func makeEthereumMethod(opts *DocumentProviderParseOpts, name string, pcb *parse
 	rets := func(skipFn func(isArgs bool, index int, ty reflect.Type, descriptor *goopenrpcT.ContentDescriptor) bool) ([]*goopenrpcT.ContentDescriptor, error) {
 		out := []*goopenrpcT.ContentDescriptor{}
 		for i, r := range retTyptes {
-			cd, err := contentDescriptor(r, retASTFields[i])
+			cd, err := opts.contentDescriptor(r, retASTFields[i])
 			if err != nil {
 				return nil, err
 			}
@@ -214,8 +184,6 @@ func makeEthereumMethod(opts *DocumentProviderParseOpts, name string, pcb *parse
 		return out, nil
 	}
 
-	runtimeFile, runtimeLine := pcb.runtimeF.FileLine(pcb.runtimeF.Entry())
-
 	collectedParams, err := params(opts.ContentDescriptorTypeSkipFn)
 	if err != nil {
 		return nil, err
@@ -224,40 +192,9 @@ func makeEthereumMethod(opts *DocumentProviderParseOpts, name string, pcb *parse
 	if err != nil {
 		return nil, err
 	}
-	res := collectedResults[0] // OpenRPC Document specific
+	res := collectedResults[0] // OpenRPC Document specific (can has only one result).
 
-	method := newMethod()
-	method.Name = name
-	method.Summary = methodSummary(pcb.fdecl)
-	method.Description = description()
-	method.ExternalDocs = goopenrpcT.ExternalDocs{
-		Description: fmt.Sprintf("line=%d", runtimeLine),
-		URL:         fmt.Sprintf("file://%s", runtimeFile), // TODO: Provide WORKING external docs links to Github (actually a wrapper/injection to make this configurable).
-	}
-	method.Params = collectedParams
-	method.Result = res
-	method.Deprecated = methodDeprecated(pcb.fdecl)
-	return method, nil
-
-	//return &goopenrpcT.Method{
-	//	Name:        name, // pcb.runtimeF.Name(), // FIXME or give me a comment.
-	//	Tags:        nil,
-	//	Summary:     methodSummary(pcb.fdecl),
-	//	Description: description(),
-	//	ExternalDocs: goopenrpcT.ExternalDocs{
-	//		Description: fmt.Sprintf("line=%d", runtimeLine),
-	//		URL:         fmt.Sprintf("file://%s", runtimeFile), // TODO: Provide WORKING external docs links to Github (actually a wrapper/injection to make this configurable).
-	//	},
-	//	Params:         collectedParams,
-	//	Result:         res,
-	//	Deprecated:     methodDeprecated(pcb.fdecl),
-	//	Servers:        nil,
-	//	Errors:         nil,
-	//	Links:          nil,
-	//	ParamStructure: "by-position",
-	//	Examples:       nil,
-	//}, nil
-	//
+	return makeMethod(name, pcb, collectedParams, res), nil
 }
 
 // suitableCallbacks iterates over the methods of the given type. It determines if a method

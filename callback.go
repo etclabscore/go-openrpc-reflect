@@ -90,8 +90,6 @@ func (cb *Callback) getRetTypes() (retTypes []reflect.Type) {
 }
 
 func newParsedCallback(cb Callback) (*parsedCallback, error) {
-	rcvrVal, fnVal := cb.Rcvr(), cb.Func()
-
 	runtimeFunc := runtime.FuncForPC(cb.Func().Pointer())
 	runtimeFile, _ := runtimeFunc.FileLine(runtimeFunc.Entry())
 
@@ -101,7 +99,7 @@ func newParsedCallback(cb Callback) (*parsedCallback, error) {
 		return nil, err
 	}
 
-	astFuncDecl := documentGetAstFunc(Callback{rcvrVal, fnVal}, astFile, runtimeFunc)
+	astFuncDecl := documentGetAstFunc(cb, astFile, runtimeFunc)
 	if astFuncDecl == nil {
 		return nil, fmt.Errorf("nil ast func cb=%v", cb)
 	}
@@ -110,7 +108,7 @@ func newParsedCallback(cb Callback) (*parsedCallback, error) {
 		cb:       &cb,
 		runtimeF: runtimeFunc,
 		fdecl:    astFuncDecl,
-		printed: []byte{},
+		printed:  []byte{},
 	}
 
 	out := []byte{}

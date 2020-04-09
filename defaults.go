@@ -5,10 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/ast"
+	"net/url"
+	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
+	"strings"
 
 	"github.com/alecthomas/jsonschema"
+	go_jsonschema_walk "github.com/etclabscore/go-jsonschema-walk"
 	"github.com/go-openapi/spec"
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
@@ -227,4 +232,91 @@ func isErrorType(t reflect.Type) bool {
 		t = t.Elem()
 	}
 	return t.Implements(errorType)
+}
+
+func githubLinkFromValue(receiver reflect.Value, runtimeF *runtime.Func) (*url.URL, error) {
+	ty := receiver.Type()
+	switch ty.Kind() {
+	case reflect.Ptr, reflect.Interface:
+		ty = ty.Elem()
+	}
+	packagePath := ty.PkgPath()
+
+	if !strings.HasPrefix(packagePath, "github.com") {
+		return nil, fmt.Errorf("'%s': not a github.com package name", packagePath)
+	}
+
+	uris := strings.Split(packagePath, "/") // eg. github.com / ethereum / go-ethereum / internal / ethapi / api.go | [.(*MyRec)... ]
+	githubURIOwnerName := strings.Join(uris[:3], "/")
+	githubURIRevision := "blob/master"
+	pkgRelDir := ""
+	pkgRelDir = strings.Join(uris[3:], "/")
+	if pkgRelDir != "" {
+		// Otherwise we get a double // for files at the module root.
+		pkgRelDir = "/" + pkgRelDir
+	}
+
+	runtimeFile, runtimeLine := runtimeF.FileLine(runtimeF.Entry())
+	base := filepath.Base(runtimeFile)
+
+	ref := fmt.Sprintf("https://%s/%s%s/%s#L%d", githubURIOwnerName, githubURIRevision, pkgRelDir, base, runtimeLine)
+
+	return url.Parse(ref)
+}
+
+// methodDescription uses the printed content of the method.
+// If the
+func methodDescription(pcb *parsedCallback) string {
+	out := fmt.Sprintf("```go\n%s\n```", string(pcb.printed))
+
+	// If we can assemble a github.com/ url for the method, then
+	// return that prefixed before the printed code.
+	githubURL, err := githubLinkFromValue(pcb.cb.Rcvr(), pcb.runtimeF)
+	if err == nil {
+		return fmt.Sprintf("[%s](%s)\n%s", githubURL, githubURL, out)
+	}
+
+	return out
+}
+
+func (d *DocumentProviderParseOpts) contentDescriptor(ty reflect.Type, astNamedField *NamedField) (*goopenrpcT.ContentDescriptor, error) {
+	sch := typeToSchema(d, ty)
+	if d != nil && len(d.SchemaMutationFns) > 0 {
+		for _, mutation := range d.SchemaMutationFns {
+			a := go_jsonschema_walk.NewAnalysisT()
+			if err := a.WalkDepthFirst(&sch, mutation); err != nil {
+				return nil, fmt.Errorf("schema mutation error: %v", err)
+			}
+		}
+	}
+	summary := astNamedField.Field.Comment.Text()
+	if summary == "" {
+		summary = astNamedField.Field.Doc.Text()
+	}
+	return &goopenrpcT.ContentDescriptor{
+		Content: goopenrpcT.Content{
+			Name:        astNamedField.Name,
+			Summary:     summary,
+			Required:    true,
+			Description: fmt.Sprintf("`%s`", fullTypeDescription(ty)),
+			Schema:      sch,
+		},
+	}, nil
+}
+
+func makeMethod(name string, pcb *parsedCallback, params []*goopenrpcT.ContentDescriptor, result *goopenrpcT.ContentDescriptor) *goopenrpcT.Method {
+	runtimeFile, runtimeLine := pcb.runtimeF.FileLine(pcb.runtimeF.Entry())
+
+	method := newMethod()
+	method.Name = name
+	method.Summary = methodSummary(pcb.fdecl)
+	method.Description = methodDescription(pcb)
+	method.ExternalDocs = goopenrpcT.ExternalDocs{
+		Description: fmt.Sprintf("line=%d", runtimeLine),
+		URL:         fmt.Sprintf("file://%s", runtimeFile), // TODO: Provide WORKING external docs links to Github (actually a wrapper/injection to make this configurable).
+	}
+	method.Params = params
+	method.Result = result
+	method.Deprecated = methodDeprecated(pcb.fdecl)
+	return method
 }

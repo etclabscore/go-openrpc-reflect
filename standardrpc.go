@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/davecgh/go-spew/spew"
-	go_jsonschema_walk "github.com/etclabscore/go-jsonschema-walk"
 	goopenrpcT "github.com/gregdhill/go-openrpc/types"
 )
 
@@ -82,17 +81,8 @@ var StandardCallbackToMethod = func(opts *DocumentProviderParseOpts, name string
 
 func makeGoRPCMethod(opts *DocumentProviderParseOpts, name string, pcb *parsedCallback) (*goopenrpcT.Method, error) {
 
-	// Arg, Result
 	argTypes := pcb.cb.getArgTypes()
-	if len(argTypes) != 2 {
-		panic("should be caught in callbacks (registry) method")
-	}
-
-	// Error
-	retTyptes := pcb.cb.getRetTypes()
-	if len(retTyptes) != 1 {
-		panic("should be caught in callbacks (registry) method")
-	}
+	// We don' need return types since we know that the only return value can be an error.
 
 	argASTFields := []*NamedField{}
 	if pcb.fdecl.Type != nil &&
@@ -103,37 +93,10 @@ func makeGoRPCMethod(opts *DocumentProviderParseOpts, name string, pcb *parsedCa
 		}
 	}
 
-	description := func() string {
-		return fmt.Sprintf("```go\n%s\n```", string(pcb.printed))
-	}
-
-	contentDescriptor := func(ty reflect.Type, astNamedField *NamedField) (*goopenrpcT.ContentDescriptor, error) {
-		sch := typeToSchema(opts, ty)
-		if opts != nil && len(opts.SchemaMutationFns) > 0 {
-			for i, mutation := range opts.SchemaMutationFns {
-				a := go_jsonschema_walk.NewAnalysisT()
-				if err := a.WalkDepthFirst(&sch, mutation); err != nil {
-					return nil, fmt.Errorf("index: %d: error: %v", i, err)
-				}
-				//if err := mutation(&sch); err != nil {
-				//}
-			}
-		}
-		return &goopenrpcT.ContentDescriptor{
-			Content: goopenrpcT.Content{
-				Name:        astNamedField.Name,
-				Summary:     astNamedField.Field.Comment.Text(),
-				Required:    true,
-				Description: fmt.Sprintf("```go\n%s\n```", fullTypeDescription(ty)),
-				Schema:      sch,
-			},
-		}, nil
-	}
-
 	params := func(skipFn func(isArgs bool, index int, ty reflect.Type, descriptor *goopenrpcT.ContentDescriptor) bool) ([]*goopenrpcT.ContentDescriptor, error) {
 		out := []*goopenrpcT.ContentDescriptor{}
 		for i, a := range argTypes {
-			cd, err := contentDescriptor(a, argASTFields[i])
+			cd, err := opts.contentDescriptor(a, argASTFields[i])
 			if err != nil {
 				return nil, err
 			}
@@ -148,44 +111,12 @@ func makeGoRPCMethod(opts *DocumentProviderParseOpts, name string, pcb *parsedCa
 		return out, nil
 	}
 
-	runtimeFile, runtimeLine := pcb.runtimeF.FileLine(pcb.runtimeF.Entry())
-
 	collectedParams, err := params(opts.ContentDescriptorTypeSkipFn)
 	if err != nil {
 		return nil, err
 	}
 
-	method := newMethod()
-	method.Name = name
-	method.Summary = methodSummary(pcb.fdecl)
-	method.Description = description()
-	method.ExternalDocs = goopenrpcT.ExternalDocs{
-		Description: fmt.Sprintf("line=%d", runtimeLine),
-		URL:         fmt.Sprintf("file://%s", runtimeFile), // TODO: Provide WORKING external docs links to Github (actually a wrapper/injection to make this configurable).
-	}
-	method.Params = []*goopenrpcT.ContentDescriptor{collectedParams[0]}
-	method.Result = collectedParams[1]
-	method.Deprecated = methodDeprecated(pcb.fdecl)
-	return method, nil
-
-	//return &goopenrpcT.Method{
-	//	Name:        name, // pcb.runtimeF.Name(), // FIXME or give me a comment.
-	//	Tags:        nil,
-	//	Summary:     methodSummary(pcb.fdecl),
-	//	Description: description(),
-	//	ExternalDocs: goopenrpcT.ExternalDocs{
-	//		Description: fmt.Sprintf("line=%d", runtimeLine),
-	//		URL:         fmt.Sprintf("file://%s", runtimeFile), // TODO: Provide WORKING external docs links to Github (actually a wrapper/injection to make this configurable).
-	//	},
-	//	Params:         []*goopenrpcT.ContentDescriptor{collectedParams[0]},
-	//	Result:         collectedParams[1],
-	//	Deprecated:     methodDeprecated(pcb.fdecl),
-	//	Servers:        nil,
-	//	Errors:         nil,
-	//	Links:          nil,
-	//	ParamStructure: "by-position",
-	//	Examples:       nil,
-	//}, nil
+	return makeMethod(name, pcb, collectedParams[:1], collectedParams[1]), nil
 }
 
 // Precompute the reflect type for error. Can't use error directly

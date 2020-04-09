@@ -13,7 +13,7 @@
       "name": "",
       "url": ""
     },
-    "version": "v0.0.0-beta-2020-04-09T06:00:45-05:00-1586430045"
+    "version": "v0.0.0-beta-2020-04-09T15:32:57-05:00-1586464377"
   },
   "servers": [],
   "methods": [
@@ -21,7 +21,7 @@
       "name": "myBasicService_getAll",
       "tags": [],
       "summary": "GetAll returns all the objects contained in state.\n",
-      "description": "```go\n// GetAll returns all the objects contained in state.\nfunc (m *MyBasicService) GetAll() (result []*MyBasicObject, err error) {\n\tm.mocking.setCalledWith(\"GetAll\")\n\tresult = []*MyBasicObject{}\n\tfor _, v := range m.stateFullData {\n\t\tresult = append(result, v)\n\t}\n\treturn result, nil\n}\n```",
+      "description": "[https://github.com/etclabscore/go-openrpc-reflect/blob/master/document_test.go#L62](https://github.com/etclabscore/go-openrpc-reflect/blob/master/document_test.go#L62)\n```go\n// GetAll returns all the objects contained in state.\nfunc (m *MyBasicService) GetAll() (result []*MyBasicObject, err error) {\n\tm.mocking.setCalledWith(\"GetAll\")\n\tresult = []*MyBasicObject{}\n\tfor _, v := range m.stateFullData {\n\t\tresult = append(result, v)\n\t}\n\treturn result, nil\n}\n```",
       "externalDocs": {
         "description": "line=62",
         "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
@@ -30,7 +30,7 @@
       "result": {
         "name": "result",
         "summary": "",
-        "description": "```go\n\n```",
+        "description": "``",
         "required": true,
         "deprecated": false,
         "schema": {
@@ -48,7 +48,7 @@
       "name": "myBasicService_getDisguisedName",
       "tags": [],
       "summary": "GetDisguisedName gets a sort-of disguised name for a user.\n",
-      "description": "```go\n// GetDisguisedName gets a sort-of disguised name for a user.\nfunc (m *MyBasicService) GetDisguisedName(name string) (disguise string, err error) {\n\tm.mocking.setCalledWith(\"EncodedName\", name)\n\tif v, ok := m.stateFullData[name]; !ok {\n\t\treturn \"\", errors.New(\"no object by that name\")\n\t} else {\n\t\tsum := sha1.Sum([]byte(v.Name))\n\t\treturn fmt.Sprintf(`%s, aka %x`, v.Name, sum[:4]), nil\n\t}\n}\n```",
+      "description": "[https://github.com/etclabscore/go-openrpc-reflect/blob/master/document_test.go#L82](https://github.com/etclabscore/go-openrpc-reflect/blob/master/document_test.go#L82)\n```go\n// GetDisguisedName gets a sort-of disguised name for a user.\nfunc (m *MyBasicService) GetDisguisedName(name string) (disguise string, err error) {\n\tm.mocking.setCalledWith(\"EncodedName\", name)\n\tif v, ok := m.stateFullData[name]; !ok {\n\t\treturn \"\", errors.New(\"no object by that name\")\n\t} else {\n\t\tsum := sha1.Sum([]byte(v.Name))\n\t\treturn fmt.Sprintf(`%s, aka %x`, v.Name, sum[:4]), nil\n\t}\n}\n```",
       "externalDocs": {
         "description": "line=82",
         "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
@@ -57,7 +57,7 @@
         {
           "name": "name",
           "summary": "",
-          "description": "```go\nstring\n```",
+          "description": "`string`",
           "required": true,
           "deprecated": false,
           "schema": {
@@ -68,7 +68,7 @@
       "result": {
         "name": "disguise",
         "summary": "",
-        "description": "```go\nstring\n```",
+        "description": "`string`",
         "required": true,
         "deprecated": false,
         "schema": {
@@ -86,7 +86,7 @@
       "name": "myBasicService_operateOnExternalType",
       "tags": [],
       "summary": "OperateOnExternalType accepts a type imported from another package as it's argument.\n",
-      "description": "```go\n// OperateOnExternalType accepts a type imported from another package as it's argument.\nfunc (m *MyBasicService) OperateOnExternalType(externalObject *goopenrpcT.ExamplePairing) error {\n\n\treturn nil\n}\n```",
+      "description": "[https://github.com/etclabscore/go-openrpc-reflect/blob/master/document_test.go#L95](https://github.com/etclabscore/go-openrpc-reflect/blob/master/document_test.go#L95)\n```go\n// OperateOnExternalType accepts a type imported from another package as it's argument.\nfunc (m *MyBasicService) OperateOnExternalType(externalObject *goopenrpcT.ExamplePairing) error {\n\n\treturn nil\n}\n```",
       "externalDocs": {
         "description": "line=95",
         "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
@@ -95,7 +95,7 @@
         {
           "name": "externalObject",
           "summary": "",
-          "description": "```go\ngithub.com/gregdhill/go-openrpc/types.*ExamplePairing\n```",
+          "description": "`github.com/gregdhill/go-openrpc/types.*ExamplePairing`",
           "required": true,
           "deprecated": false,
           "schema": {
@@ -124,7 +124,7 @@
       "name": "myBasicService_set",
       "tags": [],
       "summary": "Set places a value in state.\n",
-      "description": "```go\n// Set places a value in state.\nfunc (m *MyBasicService) Set(value MyBasicObject) (err error) {\n\tm.mocking.setCalledWith(\"Set\", value)\n\tif m.stateFullData == nil {\n\t\tm.stateFullData = make(map[string]*MyBasicObject)\n\t}\n\tm.stateFullData[value.Name] = \u0026value\n\treturn nil\n}\n```",
+      "description": "[https://github.com/etclabscore/go-openrpc-reflect/blob/master/document_test.go#L72](https://github.com/etclabscore/go-openrpc-reflect/blob/master/document_test.go#L72)\n```go\n// Set places a value in state.\nfunc (m *MyBasicService) Set(value MyBasicObject) (err error) {\n\tm.mocking.setCalledWith(\"Set\", value)\n\tif m.stateFullData == nil {\n\t\tm.stateFullData = make(map[string]*MyBasicObject)\n\t}\n\tm.stateFullData[value.Name] = \u0026value\n\treturn nil\n}\n```",
       "externalDocs": {
         "description": "line=72",
         "url": "file:///home/ia/go/src/github.com/etclabscore/go-openrpc-reflect/document_test.go"
@@ -133,7 +133,7 @@
         {
           "name": "value",
           "summary": "",
-          "description": "```go\ngithub.com/etclabscore/go-openrpc-reflect.MyBasicObject\n```",
+          "description": "`github.com/etclabscore/go-openrpc-reflect.MyBasicObject`",
           "required": true,
           "deprecated": false,
           "schema": {
@@ -318,7 +318,7 @@
     }
   },
   "externalDocs": {
-    "description": "GPLv3",
-    "url": "https://github.com/ethereum/go-ethereum/blob/COPYING.md"
+    "description": "Placeholder",
+    "url": "https://example.com"
   }
 }

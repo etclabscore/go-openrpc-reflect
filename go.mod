@@ -1,4 +1,4 @@
-module github.com/etclabscore/openrpc-go-document
+module github.com/etclabscore/go-openrpc-document
 
 go 1.13
 

@@ -1,4 +1,4 @@
-package go_openrpc_document
+package go_openrpc_reflect
 
 import (
 	"reflect"

@@ -185,7 +185,7 @@ func methodSummary(fdecl *ast.FuncDecl) string {
 }
 
 func methodDeprecated(fdecl *ast.FuncDecl) bool {
-	matched, _ := regexp.MatchString(`(?im)deprecated`, methodSummary(fdecl))
+	matched, _ := regexp.MatchString(`(?im)deprecated`, fdecl.Doc.Text())
 	return matched
 }
 

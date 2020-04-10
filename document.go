@@ -238,7 +238,13 @@ func (r *ReflectedDocument) discover() (*goopenrpcT.OpenRPCSpec1, error) {
 
 	}
 	sort.Slice(r.spec1.Methods, func(i, j int) bool {
-		return r.spec1.Methods[i].Name < r.spec1.Methods[j].Name
+		if r.spec1.Methods[i].Name < r.spec1.Methods[j].Name {
+			return true
+		}
+		if r.spec1.Methods[i].Name == r.spec1.Methods[j].Name {
+			return r.spec1.Methods[i].Description < r.spec1.Methods[j].Description
+		}
+		return false
 	})
 
 	return r.spec1, nil

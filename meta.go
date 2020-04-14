@@ -1,4 +1,4 @@
-package go_openrpc_refract
+package go_openrpc_reflect
 
 import (
 	"net"

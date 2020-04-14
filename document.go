@@ -1,294 +1,235 @@
-package go_openrpc_reflect
+package go_openrpc_refract
 
 import (
-	"crypto/sha1"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
+	"go/ast"
+	"net"
 	"reflect"
 	"sort"
-	"strings"
-	"time"
 
 	"github.com/alecthomas/jsonschema"
-	jst "github.com/etclabscore/go-jsonschema-walk"
-	"github.com/go-openapi/jsonreference"
 	"github.com/go-openapi/spec"
-	goopenrpcT "github.com/gregdhill/go-openrpc/types"
+	meta_schema "github.com/open-rpc/meta-schema"
 )
 
-type Discoverer interface {
-	discover() (*goopenrpcT.OpenRPCSpec1, error)
+// DocumentReflector describes the interface necessary for composing
+// a complete openrpc schema-valid document.
+//
+// Since methods will be collected in memory by iterating a given receiver's (ie an RPC 'service')
+// the interface does not include a method for collecting Methods; that logic is handled
+// diredtly by the Document type, and is common to all reflection patterns (ie rpc and go-ethereum/rpc).
+type DocumentReflector interface {
+	ReceiverRegisterer
 }
 
-type DocumentProviderParseOpts struct {
-	SchemaMutationFromTypeFns    []func(s *spec.Schema, ty reflect.Type)
-	SchemaMutationFns            []func(s *spec.Schema) error
-	ContentDescriptorMutationFns []func(isArgs bool, index int, cd *goopenrpcT.ContentDescriptor)
-
-	MethodBlackList             []string
-	ContentDescriptorTypeSkipFn func(isArgs bool, index int, ty reflect.Type, cd *goopenrpcT.ContentDescriptor) bool
-
-	// TypeMapper gets passed directly to the jsonschema reflection library.
-	TypeMapper func(r reflect.Type) *jsonschema.Type
-
-	// SchemaIgnoredTypes also gets passed directly to the jsonschema reflection library.
-	SchemaIgnoredTypes []interface{}
+// MetaRegisterer implements methods that must come from the mind of the developer.
+// They describe the document (well, provide document description values) that cannot be
+// parsed from anything available.
+//
+type MetaRegisterer interface {
+	ServerRegisterer
+	GetInfo() func() (info *meta_schema.InfoObject)
+	GetExternalDocs() func() (exdocs *meta_schema.ExternalDocumentationObject)
 }
 
-/*
-ServerDescriptor provides service information common
-to a all methods of an API service, ie the server.
-
-It is a single sibling of the
-potentially-many ReceiverServiceDescriptor(s).
-*/
-type ServerDescriptor interface {
-	OpenRPCInfo() goopenrpcT.Info
-	OpenRPCExternalDocs() *goopenrpcT.ExternalDocs
+// ServerRegisterer implements a method translating a slice of net Listeners into
+// document `.servers`.
+type ServerRegisterer interface {
+	GetServers() func(listeners []net.Listener) (*meta_schema.Servers, error)
 }
 
-// ServerDescriptorT implements the ServerDescriptor interface.
-type ServerDescriptorT struct {
-	ServiceOpenRPCInfoFn         func() goopenrpcT.Info
-	ServiceOpenRPCExternalDocsFn func() *goopenrpcT.ExternalDocs
+type ReceiverRegisterer interface {
+	MethodRegisterer
+	ReceiverMethods(name string, receiver interface{}) ([]meta_schema.MethodObject, error)
 }
 
-func (s *ServerDescriptorT) OpenRPCInfo() goopenrpcT.Info {
-	return s.ServiceOpenRPCInfoFn()
+type MethodRegisterer interface {
+	ContentDescriptorRegisterer
+	IsMethodEligible(method reflect.Method) bool
+	GetMethodName(moduleName string, r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error)
+	GetMethodTags(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectTags, error)
+	GetMethodDescription(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error)
+	GetMethodSummary(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error)
+	GetMethodDeprecated(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (bool, error)
+	GetMethodParamStructure(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error)
+	GetMethodErrors(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectErrors, error)
+	GetMethodExternalDocs(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.ExternalDocumentationObject, error)
+	GetMethodServers(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.Servers, error)
+	GetMethodLinks(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectLinks, error)
+	GetMethodExamples(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectExamples, error)
+
+	GetMethodParams(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) ([]meta_schema.ContentDescriptorObject, error)
+	GetMethodResult(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (meta_schema.ContentDescriptorObject, error)
 }
 
-func (s *ServerDescriptorT) OpenRPCExternalDocs() *goopenrpcT.ExternalDocs {
-	if s.ServiceOpenRPCExternalDocsFn != nil {
-		return s.ServiceOpenRPCExternalDocsFn()
-	}
-	return nil
+type ContentDescriptorRegisterer interface {
+	SchemaRegisterer
+	GetContentDescriptorName(r reflect.Value, m reflect.Method, field *ast.Field) (string, error)
+	GetContentDescriptorSummary(r reflect.Value, m reflect.Method, field *ast.Field) (string, error)
+	GetContentDescriptorDescription(r reflect.Value, m reflect.Method, field *ast.Field) (string, error)
+	GetContentDescriptorRequired(r reflect.Value, m reflect.Method, field *ast.Field) (bool, error)
+	GetContentDescriptorDeprecated(r reflect.Value, m reflect.Method, field *ast.Field) (bool, error)
+
+	GetSchema(r reflect.Value, m reflect.Method, field *ast.Field, ty reflect.Type) (schema meta_schema.JSONSchema, err error)
 }
 
-type ReceiverServiceDescriptor interface {
-	ParseOptions() *DocumentProviderParseOpts
-	MethodName(receiver interface{}, receiverName, methodName string) string
-	Callbacks(receiver interface{}) map[string]Callback
-	CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
+type SchemaRegisterer interface {
+	// Since our implementation will be piggy-backed on jsonschema.Reflector,
+	// this is where our field-by-field Getter abstraction ends.
+	// If we didn't rely so heavily on this dependency, we would use
+	// a pattern like method and content descriptor, where fields are defined
+	// individually per reflector.
+	// JSON Schemas have a lot of fields.
+	//
+	// And including meta_schema.go, we're using 3 data types to develop this object.
+	// - alecthomas/jsonschema.Schema: use .Reflector to reflect the schema from its Go declaration.
+	// - openapi/spec.Schema: the "official" spec data type from swagger
+	// - <generated> meta_schema.go.JSONSchema as eventual local implementation type.
+	//
+	// Since the native language for this data type is JSON, I (the developer) assume
+	// that using the standard lib to Un/Marshal between these data types is as good a glue as any.
+	// Unmarshaling will be slow, but should only ever happen once up front, so I'm not concerned with performance.
+	//
+	// SchemaIgnoredTypes reply will be passed directly to the jsonschema.Reflector.IgnoredTypes field.
+	SchemaIgnoredTypes() []interface{}
+	// SchemaTypeMap will be passed directory to the jsonschema.Reflector.TypeMapper field.
+	SchemaTypeMap() func(ty reflect.Type) *jsonschema.Type
+	// SchemaMutations will be run in a depth-first walk on the reflected schema.
+	SchemaMutations(ty reflect.Type) []func(*spec.Schema) error
 }
 
-// ReceiverServiceDescriptorT defines a user-defined struct providing necessary
-// functions for the document parses to get the information it needs
-// to make a complete OpenRPC-schema document.
-type ReceiverServiceDescriptorT struct {
-	ProviderParseOptions               *DocumentProviderParseOpts
-	ServiceCallbacksFullyQualifiedName func(receiver interface{}, receiverName, methodName string) string
-	ServiceCallbacksFromReceiverFn     func(receiver interface{}) map[string]Callback
-	ServiceCallbackToMethodFn          func(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error)
+type Service int
+
+const (
+	Standard Service = iota
+	Ethereum
+)
+
+type RPCEthereum struct {
+	*Document
 }
 
-func (s *ReceiverServiceDescriptorT) ParseOptions() *DocumentProviderParseOpts {
-	return s.ProviderParseOptions
+func (d *RPCEthereum) Discover() (*meta_schema.OpenrpcDocument, error) {
+	return d.Document.Discover()
 }
 
-func (s *ReceiverServiceDescriptorT) MethodName(receiver interface{}, receiverName, methodName string) string {
-	return s.ServiceCallbacksFullyQualifiedName(receiver, receiverName, methodName)
+type RPC struct {
+	*Document
 }
 
-func (s *ReceiverServiceDescriptorT) Callbacks(receiver interface{}) map[string]Callback {
-	return s.ServiceCallbacksFromReceiverFn(receiver)
-}
+type RPCEthereumArg int
 
-func (s *ReceiverServiceDescriptorT) CallbackToMethod(opts *DocumentProviderParseOpts, name string, cb Callback) (*goopenrpcT.Method, error) {
-	return s.ServiceCallbackToMethodFn(opts, name, cb)
-}
-
-// Spec1 is a wrapped type around an openrpc schema document.
-type Document struct {
-	Discoverer
-	Static    *StaticDocument
-	Reflector *ReflectedDocument
-}
-
-// NewReflectDocument initializes a Document type given a receiverServiceConfigurationProviders (eg service or aggregate of services)
-// and options to use while parsing the runtime code into openrpc types.
-func NewReflectDocument(serverProvider ServerDescriptor) *Document {
-	d := &Document{}
-	d.Reflector = &ReflectedDocument{
-		rpcServerServiceProvider: serverProvider,
-	}
-	return d
-}
-
-func NewStaticDocument(input io.Reader) *Document {
-	d := &Document{}
-	d.Static = &StaticDocument{}
-
-	bs, err := ioutil.ReadAll(input)
+func (d *RPC) Discover(arg RPCEthereumArg, document *meta_schema.OpenrpcDocument) error {
+	doc, err := d.Document.Discover()
 	if err != nil {
-		panic("fixme")
+		return err
 	}
-
-	d.Static.raw = bs
-	return d
+	*document = *doc
+	return err
 }
 
-func (d *Document) Discover() (*goopenrpcT.OpenRPCSpec1, error) {
-	if d.Static != nil {
-		return d.Static.discover()
-	} else if d.Reflector != nil {
-		return d.Reflector.discover()
+type Document struct {
+	meta          MetaRegisterer
+	reflector     DocumentReflector
+	receiverNames []string
+	receivers     []interface{}
+	listeners     []net.Listener
+}
+
+func (d *Document) RPCDiscover(kind Service) (receiver interface{}) {
+	switch kind {
+	case Standard:
+		return &RPC{d}
+	case Ethereum:
+		return &RPCEthereum{d}
 	}
-	return nil, errors.New("empty document")
-}
-
-type StaticDocument struct {
-	raw []byte
-}
-
-func (s *StaticDocument) discover() (*goopenrpcT.OpenRPCSpec1, error) {
-	if len(s.raw) == 0 {
-		return nil, errors.New("missing raw document")
-	}
-	out := &goopenrpcT.OpenRPCSpec1{}
-	err := json.Unmarshal(s.raw, out)
-	return out, err
-}
-
-type ReflectedDocument struct {
-	rpcServerServiceProvider              ServerDescriptor
-	receiverServiceConfigurationProviders []ReceiverServiceDescriptor
-	receiverNames                         []string
-	receiverServices                      []interface{}
-	callbacks                             map[string]Callback // cache?
-	spec1                                 *goopenrpcT.OpenRPCSpec1
-}
-
-func (r *ReflectedDocument) RegisterReceiver(receiver interface{}, provider ReceiverServiceDescriptor) {
-	r.registerReceiverWithName("", receiver, provider)
-}
-
-func (d *ReflectedDocument) RegisterReceiverWithName(name string, receiver interface{}, provider ReceiverServiceDescriptor) {
-	d.registerReceiverWithName(name, receiver, provider)
-}
-
-func (s *ReflectedDocument) registerReceiverWithName(name string, receiver interface{}, provider ReceiverServiceDescriptor) {
-	if len(s.receiverNames) == 0 {
-		s.receiverNames = []string{}
-	}
-	if len(s.receiverServices) == 0 {
-		s.receiverServices = []interface{}{}
-	}
-	if len(s.receiverServiceConfigurationProviders) == 0 {
-		s.receiverServiceConfigurationProviders = []ReceiverServiceDescriptor{}
-	}
-	s.receiverNames = append(s.receiverNames, name)
-	s.receiverServices = append(s.receiverServices, receiver)
-	s.receiverServiceConfigurationProviders = append(s.receiverServiceConfigurationProviders, provider)
-}
-
-func (r *ReflectedDocument) discover() (*goopenrpcT.OpenRPCSpec1, error) {
-	if r.spec1 != nil {
-		return r.spec1, nil
-	}
-
-	if r == nil || r.receiverServiceConfigurationProviders == nil {
-		return nil, errors.New("server provider undefined")
-	}
-
-	r.spec1 = NewSpec()
-
-	r.spec1.Info = r.rpcServerServiceProvider.OpenRPCInfo()
-	if eDocs := r.rpcServerServiceProvider.OpenRPCExternalDocs(); eDocs != nil {
-		r.spec1.ExternalDocs = *eDocs
-	}
-
-	// Set version by runtime, after parse.
-	spl := strings.Split(r.spec1.Info.Version, "+")
-	r.spec1.Info.Version = fmt.Sprintf("%s-%s-%d", spl[0], time.Now().Format(time.RFC3339), time.Now().Unix())
-
-	r.spec1.Methods = []goopenrpcT.Method{}
-
-	for i := 0; i < len(r.receiverNames); i++ {
-		receiverName := r.receiverNames[i]
-		receiverService := r.receiverServices[i]
-		serviceConfigurationProvider := r.receiverServiceConfigurationProviders[i]
-
-		methods := []goopenrpcT.Method{}
-
-		callbacks := serviceConfigurationProvider.Callbacks(receiverService)
-		for methodName, cb := range callbacks {
-			if isDiscoverMethodBlacklisted(serviceConfigurationProvider.ParseOptions(), methodName) {
-				continue
-			}
-
-			// Get fully qualified method name.
-			methodName = serviceConfigurationProvider.MethodName(receiverService, receiverName, methodName)
-
-			// Get method
-			m, err := serviceConfigurationProvider.CallbackToMethod(serviceConfigurationProvider.ParseOptions(), methodName, cb)
-			if err == errParseCallbackAutoGenerate {
-				continue
-			}
-			if m == nil || err != nil {
-				return nil, err
-			}
-
-			methods = append(methods, *m)
-		}
-
-		r.spec1.Methods = append(r.spec1.Methods, methods...)
-
-	}
-	sort.Slice(r.spec1.Methods, func(i, j int) bool {
-		if r.spec1.Methods[i].Name < r.spec1.Methods[j].Name {
-			return true
-		}
-		if r.spec1.Methods[i].Name == r.spec1.Methods[j].Name {
-			return r.spec1.Methods[i].Description < r.spec1.Methods[j].Description
-		}
-		return false
-	})
-
-	return r.spec1, nil
-}
-func (d *ReflectedDocument) flattenSchemas() *ReflectedDocument {
-
-	d.documentMethodsSchemaMutation(func(s *spec.Schema) error {
-		id := schemaKey(*s)
-		d.spec1.Components.Schemas[id] = *s
-		ss := spec.Schema{}
-		ss.Ref = spec.Ref{
-			Ref: jsonreference.MustCreateRef("#/components/schemas/" + id),
-		}
-		*s = ss
-		return nil
-	})
-
-	return d
-}
-
-func schemaKey(schema spec.Schema) string {
-	b, _ := json.Marshal(schema)
-	sum := sha1.Sum(b)
-	return fmt.Sprintf(`%s_%s_%x`, schema.Title, strings.Join(schema.Type, "+"), sum[:4])
-}
-
-func (r *ReflectedDocument) documentMethodsSchemaMutation(mut func(s *spec.Schema) error) {
-	a := jst.NewAnalysisT()
-	for i := 0; i < len(r.spec1.Methods); i++ {
-
-		met := r.spec1.Methods[i]
-
-		// Params.
-		for ip := 0; ip < len(met.Params); ip++ {
-			par := met.Params[ip]
-			a.WalkDepthFirst(&par.Schema, mut)
-			met.Params[ip] = par
-		}
-
-		// Result (single).
-		a.WalkDepthFirst(&met.Result.Schema, mut)
-	}
-}
-
-func (d *ReflectedDocument) inline() *Document {
 	return nil
+}
+
+func (d *Document) RegisterReceiver(receiver interface{}) {
+	d.RegisterReceiverName("", receiver)
+}
+
+func (d *Document) RegisterReceiverName(name string, receiver interface{}) {
+	if d.receivers == nil {
+		d.receivers = []interface{}{}
+	}
+	if d.receiverNames == nil {
+		d.receiverNames = []string{}
+	}
+	d.receiverNames = append(d.receiverNames, name)
+	d.receivers = append(d.receivers, receiver)
+}
+
+func (d *Document) RegisterListener(listener net.Listener) {
+	if d.listeners == nil {
+		d.listeners = []net.Listener{}
+	}
+	d.listeners = append(d.listeners, listener)
+}
+
+func (d *Document) WithMeta(meta MetaRegisterer) *Document {
+	d.meta = meta
+	return d
+}
+
+func (d *Document) WithReflector(reflector DocumentReflector) *Document {
+	d.reflector = reflector
+	return d
+}
+
+var errMissingInterface = errors.New("missing interface")
+
+func (d *Document) Discover() (*meta_schema.OpenrpcDocument, error) {
+
+	if d.meta == nil {
+		return nil, fmt.Errorf("meta: %v", errMissingInterface)
+	}
+
+	openRPCDocumentVersion := meta_schema.OpenrpcEnum0
+	out := &meta_schema.OpenrpcDocument{
+		Openrpc:      &openRPCDocumentVersion,
+		Info:         d.meta.GetInfo()(),         // This will panic if the developer misuses it (leaves it nil).
+		ExternalDocs: d.meta.GetExternalDocs()(), // This too.
+	}
+
+	getServersFn := d.meta.GetServers()
+	servers, err := getServersFn(d.listeners)
+	if err != nil {
+		return nil, err
+	}
+	out.Servers = servers
+
+	// Return no error if no receivers registered.
+	// > While it is required, the array may be empty (to handle security filtering, for example).
+	// > https://spec.open-rpc.org/#openrpc-object
+	if d.reflector == nil {
+		return out, nil
+	}
+	if d.receivers == nil || len(d.receivers) == 0 {
+		return out, nil
+	}
+
+	// Iterate all registered receivers (aka 'modules'),
+	// building and collecting eligible methods for each.
+	methods := []meta_schema.MethodObject{}
+	for i, rec := range d.receivers {
+		name := d.receiverNames[i]
+		ms, err := d.reflector.ReceiverMethods(name, rec)
+		if err != nil {
+			return nil, err
+		}
+		methods = append(methods, ms...)
+	}
+
+	sort.Slice(methods, func(i, j int) bool {
+		return *methods[i].Name < *methods[j].Name
+	})
+
+	// Assign by slice address.
+	m := meta_schema.Methods(methods)
+	out.Methods = &m
+
+	return out, nil
 }

@@ -1,306 +1,120 @@
-package go_openrpc_reflect
+package go_openrpc_refract
 
 import (
-	"crypto/sha1"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"math/big"
-	"os"
-	"path/filepath"
-	"reflect"
+	"net"
+	"regexp"
 	"testing"
+	"time"
 
-	goopenrpcT "github.com/gregdhill/go-openrpc/types"
+	"github.com/etclabscore/go-openrpc-refract/internal/fakemath"
+	meta_schema "github.com/open-rpc/meta-schema"
+	"github.com/stretchr/testify/assert"
 )
 
-// ---
-/*
-	Mock types and methods and functions.
-*/
-
-// MyBasicService will be a receiver.
-type MyBasicService struct {
-	mocking
-	parameterA, parameterB int
-	stateFullData map[string]*MyBasicObject
+//var TestMetaRegisterer = &MetaRegistererTester{}
+var TestMetaRegisterer = &MetaT{
+	GetServersFn:      getServers,
+	GetInfoFn:         getInfo,
+	GetExternalDocsFn: getExternalDocs,
 }
 
-type mocking struct {
-	callCount int
-	methods []string
-	args [][]interface{}
-}
-
-func (m *mocking) setCalledWith(method string, args ...interface{}) {
-	m.callCount++
-	if len(m.methods) == 0 {
-		m.methods = []string{}
+func getInfo() (info *meta_schema.InfoObject) {
+	title := "Calculator API"
+	version := time.Now().Format(time.RFC3339)
+	return &meta_schema.InfoObject{
+		Title:          (*meta_schema.InfoObjectProperties)(&title),
+		Description:    nil,
+		TermsOfService: nil,
+		Version:        (*meta_schema.InfoObjectVersion)(&version),
+		Contact:        nil,
+		License:        nil,
 	}
-	if len(m.args) == 0 {
-		m.args = [][]interface{}{}
-	}
-	m.methods = append(m.methods, method)
-	m.args = append(m.args, []interface{}{args})
 }
 
-// MyBasicObject is an mock struct type.
-// Some of its fields have comments, and it demonstrates how json/jsonschema tags work.
-type MyBasicObject struct {
-	Name string `jsonschema:"required"`
-	Age  int    `json:"oldness" jsonschema:"required"`
-
-	// CellsN describes how many cells in the body.
-	CellN *big.Int `jsonschema:"required"` // CellsN comments on the side.
-
-	Exists   bool // jsonschema:not_required
-	thoughts []string
-}
-
-// GetAll returns all the objects contained in state.
-func (m *MyBasicService) GetAll() (result []*MyBasicObject, err error) {
-	m.mocking.setCalledWith("GetAll")
-	result = []*MyBasicObject{}
-	for _, v := range m.stateFullData {
-		result = append(result, v)
-	}
-	return result, nil
-}
-
-// Set places a value in state.
-func (m *MyBasicService) Set(value MyBasicObject) (err error) {
-	m.mocking.setCalledWith("Set", value)
-	if m.stateFullData == nil {
-		m.stateFullData = make(map[string]*MyBasicObject)
-	}
-	m.stateFullData[value.Name] = &value
+func getExternalDocs() (*meta_schema.ExternalDocumentationObject) {
 	return nil
 }
 
-// GetDisguisedName gets a sort-of disguised name for a user.
-func (m *MyBasicService) GetDisguisedName(name string) (disguise string, err error) {
-	m.mocking.setCalledWith("EncodedName", name)
-	if v, ok := m.stateFullData[name]; !ok {
-		return "", errors.New("no object by that name")
-	} else {
-		sum := sha1.Sum([]byte(v.Name))
-		return fmt.Sprintf(`%s, aka %x`, v.Name, sum[:4]), nil
-	}
+func getServers() func (listeners []net.Listener) (*meta_schema.Servers, error) {
+	return StandardReflector.GetServers()
 }
 
-// OperateOnExternalType accepts a type imported from another package as it's argument.
-func (m *MyBasicService) OperateOnExternalType(externalObject *goopenrpcT.ExamplePairing) error {
-
-	return nil
+func newDocument() *Document {
+	return &Document{}
 }
-
-/*
-Implement an API for Go Standard library RPC for our MyBasicService.
-*/
-
-type MyBasicServiceRPC struct {
-	mocking
-	base *MyBasicService
-}
-
-// GetAllArg is the argument accepted by the standard RPC service GetAll method.
-// Required: false.
-type GetAllArg interface{}
-
-// GetAllReply is the kind of response returned by the standard RPC service GetAll method.
-type GetAllReply []*MyBasicObject
-
-// GetAll is an RPC wrapper method around the MyBasicService `GetAll` method.
-func (rpc *MyBasicServiceRPC) GetAll(arg GetAllArg, reply *GetAllReply) error {
-	rpc.mocking.setCalledWith("GetAll", arg)
-	got, err := rpc.base.GetAll()
-	if err != nil { return err }
-	*reply = got
-	return nil
-}
-
-// ToggleInternalThing is an unobservable method without parameters; it uses neither args nor reply.
-// It has primitive types as arguments which you can set to arbitrary values.
-func (rpc *MyBasicServiceRPC) ToggleInternalThing(uint, *float64) error {
-	rpc.mocking.setCalledWith("ToggleInternalThing")
-	return nil
-}
-
-type SetArg MyBasicObject
-type SetReply interface{}
-
-// Set is an RPC wrapper method.
-func (rpc *MyBasicServiceRPC) Set(arg SetArg, reply *SetReply) (err error) {
-	rpc.mocking.setCalledWith("Set", arg)
-	err = rpc.base.Set(MyBasicObject(arg))
-	return
-}
-
-
-type GetDisguisedNameReply string
-
-// GetDisguisedName is also a wrapper method.
-func (rpc *MyBasicServiceRPC) GetDisguisedName(name string, reply *GetDisguisedNameReply) error {
-	rpc.mocking.setCalledWith("GetDisguisedName", name)
-	name, err := rpc.base.GetDisguisedName(name)
-	if err != nil {
-		return err
-	}
-	*reply = GetDisguisedNameReply(name)
-	return nil
-}
-
-type OperateOnExternalTypeReply interface{}
-// OperateOnExternalType accepts a type imported from another package as it's argument.
-func (m *MyBasicServiceRPC) OperateOnExternalType(arg *goopenrpcT.ExamplePairing, reply *OperateOnExternalTypeReply) error {
-	m.mocking.setCalledWith("OperateOnExternalType", arg)
-	return nil
-}
-
-/*
-An exemplary function that can be served without a receiver.
-*/
-
-// NoReceiverFunction is a public function (without a receiver).
-// Yes! It can still be documented, if you want.
-func NoReceiverFunction(name string) (n int, err error) {
-	return 42, nil
-}
-
-// ---
-/*
-	Actual tests.
-*/
-
-func TestCallback_HasReceiver(t *testing.T) {
-	cb := Callback{NoReceiverValue, reflect.ValueOf(NoReceiverFunction)}
-	if cb.HasReceiver() {
-		t.Fatal("bad")
-	}
-}
-
-const testTermsOfServiceURI = "https://github.com/etclabscore/openrpc-go-document/blob/master/LICENSE.md"
 
 func TestDocument_Discover(t *testing.T) {
+	t.Run("standard", func(t *testing.T) {
+		d := newDocument().WithMeta(TestMetaRegisterer).WithReflector(StandardReflector)
 
-	t.Run("EthereumRPC", func(t *testing.T) {
+		listener, err := net.Listen("tcp", "127.0.0.1:3000")
+		defer listener.Close()
+		assert.NoError(t, err)
 
-		// Instantiate our service.
-		ethereumService := new(MyBasicService)
+		d.RegisterListener(listener)
 
-		// Server settings are top-level; one ~~server~~ API, one document.
-		serverConfigurationP := DefaultServerServiceProvider
-		serverConfigurationP.ServiceOpenRPCInfoFn = func() goopenrpcT.Info {
-			return goopenrpcT.Info{
-				Title:          "My Ethereum-Style Service",
-				Description:    "Oooohhh!",
-				TermsOfService: testTermsOfServiceURI,
-				Contact:        goopenrpcT.Contact{},
-				License:        goopenrpcT.License{},
-				Version:        "v0.0.0-beta",
-			}
+		calculatorRPC := new(fakemath.CalculatorRPC)
+		d.RegisterReceiver(calculatorRPC)
+
+		out, err := d.Discover()
+		assert.NoError(t, err)
+
+		b, _ := json.MarshalIndent(out, "", "  ")
+		t.Log(string(b))
+
+		jsonTests := map[string]interface{}{
+			"openrpc":                 "1.2.4",
+			"info.title":              "Calculator API",
+			"info.version":            regexp.MustCompile(time.Now().Format("2006")),
+			"servers.0.url":           "127.0.0.1:3000",
+			"methods.#":               float64(5),
+			"methods.0.name":          "CalculatorRPC.Add",
+			"methods.0.params.#":      float64(1),
+			"methods.0.params.0.name": "arg",
+			"methods.0.params.0.schema.properties.a.type": "integer",
+			"methods.0.result.name":                       "reply",
+			"methods.0.result.schema.type":                "integer",
+			"components":                                  nil,
 		}
 
-		// Get our document provider from the serviceProvider.
-		serverDoc := NewReflectDocument(serverConfigurationP)
-
-		rp := EthereumRPCDescriptor
-		serverDoc.Reflector.RegisterReceiver(ethereumService, rp)
-
-
-		// Discover method introspects methods at runtime and
-		// instantiates a reflective OpenRPC schema document.
-		spec1, err := serverDoc.Reflector.discover()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if l := len(spec1.Methods); l != 4 {
-			t.Fatal("methods", l)
-		}
-
-		if l := len(spec1.Components.Schemas); l != 0 {
-			// Not been flattened yet.
-			t.Fatal("schemas", l)
-		}
-
-		serverDoc.Reflector.flattenSchemas()
-
-		if l := len(spec1.Components.Schemas); l != 18 {
-			// Not been flattened yet.
-			t.Fatal("flat schemas", l)
-		}
-
-		b, _ := json.MarshalIndent(spec1, "", "  ")
-		t.Logf(string(b))
-
-		err = ioutil.WriteFile(filepath.Join("testdata", "output", "ethereum.json"), b, os.ModePerm)
-		if err != nil {
-			t.Fatal(err)
-		}
-
+		testJSON(t, b, jsonTests)
 	})
 
-	t.Run("StandardRPC", func(t *testing.T) {
+	t.Run("ethereum", func(t *testing.T) {
+		d := newDocument().WithMeta(TestMetaRegisterer).WithReflector(EthereumReflector)
 
-		standardService := new(MyBasicServiceRPC)
+		listener, err := net.Listen("tcp", "127.0.0.1:3000")
+		defer listener.Close()
+		assert.NoError(t, err)
 
-		// Server settings are top-level; one ~~server~~ API, one document.
-		//
-		// Get the server (not service!) provider default.
-		serverConfigurationP := DefaultServerServiceProvider
+		d.RegisterListener(listener)
 
-		// Modify the server config.
-		serverConfigurationP.ServiceOpenRPCInfoFn = func() goopenrpcT.Info {
-			return goopenrpcT.Info{
-				Title:          "My Standard Service",
-				Description:    "Aaaaahh!",
-				TermsOfService: testTermsOfServiceURI,
-				Contact:        goopenrpcT.Contact{},
-				License:        goopenrpcT.License{},
-				Version:        "v0.0.0-beta",
-			}
+		calculator := new(fakemath.Calculator)
+		d.RegisterReceiver(calculator)
+
+		out, err := d.Discover()
+		assert.NoError(t, err)
+
+		b, _ := json.MarshalIndent(out, "", "  ")
+		str := string(b)
+		t.Log(str)
+
+		jsonTests := map[string]interface{}{
+			"openrpc":                        "1.2.4",
+			"info.title":                     "Calculator API",
+			"info.version":                   regexp.MustCompile(time.Now().Format("2006")),
+			"servers.0.url":                  "127.0.0.1:3000",
+			"methods.#":                      float64(10),
+			"methods.0.name":                 "calculator_add",
+			"methods.0.params.#":             float64(2),
+			"methods.0.params.0.name":        "argA",
+			"methods.0.params.0.schema.type": "integer",
+			"methods.0.result.name":          "int",
+			"methods.0.result.schema.type":   "integer",
+			"components":                     nil,
 		}
 
-		// Create a new "reflectable" document for this server.
-		serverDoc := NewReflectDocument(serverConfigurationP)
-
-		// Get the service provider default for our RPC API style,
-		// in this case, the Go standard lib.
-		sp := StandardRPCDescriptor
-
-		// Register our receiver-based service standardService.
-		serverDoc.Reflector.RegisterReceiver(standardService, sp)
-
-		// serverDoc.Discover() is a shortcut for either Static or Reflected discovery.
-		spec1, err := serverDoc.Discover()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if l := len(spec1.Methods); l != 5 {
-			t.Fatal("methods", l)
-		}
-
-		if l := len(spec1.Components.Schemas); l != 0 {
-			// Not been flattened yet.
-			t.Fatal("schemas", l)
-		}
-
-		serverDoc.Reflector.flattenSchemas()
-
-		if l := len(spec1.Components.Schemas); l != 27 {
-			// Not been flattened yet.
-			t.Fatal("flat schemas", l)
-		}
-
-		b, _ := json.MarshalIndent(spec1, "", "  ")
-		t.Logf(string(b))
-
-		err = ioutil.WriteFile(filepath.Join("testdata", "output", "standard.json"), b, os.ModePerm)
-		if err != nil {
-			t.Fatal(err)
-		}
+		testJSON(t, b, jsonTests)
 	})
 }

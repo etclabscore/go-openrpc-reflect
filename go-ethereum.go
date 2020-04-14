@@ -12,9 +12,9 @@ type EthereumReflectorT struct{
 	StandardReflectorT
 }
 
-var EthereumReflector = EthereumReflectorT{}
+var EthereumReflector = &EthereumReflectorT{}
 
-func (e EthereumReflectorT) ReceiverMethods(name string, receiver interface{}) ([]meta_schema.MethodObject, error) {
+func (e *EthereumReflectorT) ReceiverMethods(name string, receiver interface{}) ([]meta_schema.MethodObject, error) {
 	if e.FnReceiverMethods != nil {
 		return e.FnReceiverMethods(name, receiver)
 	}
@@ -23,7 +23,7 @@ func (e EthereumReflectorT) ReceiverMethods(name string, receiver interface{}) (
 
 // ------------------------------------------------------------------------------
 
-func (e EthereumReflectorT) IsMethodEligible(method reflect.Method) bool {
+func (e *EthereumReflectorT) IsMethodEligible(method reflect.Method) bool {
 	if e.FnIsMethodEligible != nil {
 		return e.FnIsMethodEligible(method)
 	}
@@ -67,7 +67,7 @@ func firstToLower(str string) string {
 	return string(ret)
 }
 
-func (e EthereumReflectorT) GetMethodName(moduleName string, r reflect.Value, m reflect.Method, astFunc *ast.FuncDecl) (string, error) {
+func (e *EthereumReflectorT) GetMethodName(moduleName string, r reflect.Value, m reflect.Method, astFunc *ast.FuncDecl) (string, error) {
 	if e.FnGetMethodName != nil {
 		return e.FnGetMethodName(moduleName, r, m, astFunc)
 	}
@@ -81,7 +81,7 @@ func (e EthereumReflectorT) GetMethodName(moduleName string, r reflect.Value, m 
 	return moduleName + "_" + firstToLower(m.Name), nil
 }
 
-func (e EthereumReflectorT) GetMethodParams(r reflect.Value, m reflect.Method, astFunc *ast.FuncDecl) ([]meta_schema.ContentDescriptorObject, error) {
+func (e *EthereumReflectorT) GetMethodParams(r reflect.Value, m reflect.Method, astFunc *ast.FuncDecl) ([]meta_schema.ContentDescriptorObject, error) {
 	if e.FnGetMethodParams != nil {
 		return e.FnGetMethodParams(r, m, astFunc)
 	}
@@ -104,7 +104,7 @@ func (e EthereumReflectorT) GetMethodParams(r reflect.Value, m reflect.Method, a
 	return out, nil
 }
 
-func (e EthereumReflectorT) GetMethodResult(r reflect.Value, m reflect.Method, astFunc *ast.FuncDecl) (meta_schema.ContentDescriptorObject, error) {
+func (e *EthereumReflectorT) GetMethodResult(r reflect.Value, m reflect.Method, astFunc *ast.FuncDecl) (meta_schema.ContentDescriptorObject, error) {
 	if e.FnGetMethodResult != nil {
 		return e.FnGetMethodResult(r, m, astFunc)
 	}

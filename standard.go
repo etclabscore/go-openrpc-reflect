@@ -51,9 +51,9 @@ type StandardReflectorT struct{
 	ReceiverReflectorT
 }
 
-var StandardReflector = StandardReflectorT{}
+var StandardReflector = &StandardReflectorT{}
 
-func (c StandardReflectorT) GetServers() func (listeners []net.Listener) (*meta_schema.Servers, error) {
+func (c *StandardReflectorT) GetServers() func (listeners []net.Listener) (*meta_schema.Servers, error) {
 	return func (listeners []net.Listener) (*meta_schema.Servers, error) {
 		if listeners == nil {
 			return nil, nil
@@ -77,7 +77,7 @@ func (c StandardReflectorT) GetServers() func (listeners []net.Listener) (*meta_
 	}
 }
 
-func (c StandardReflectorT) ReceiverMethods(name string, receiver interface{}) ([]meta_schema.MethodObject, error) {
+func (c *StandardReflectorT) ReceiverMethods(name string, receiver interface{}) ([]meta_schema.MethodObject, error) {
 	if c.FnReceiverMethods != nil {
 		return c.FnReceiverMethods(name, receiver)
 	}
@@ -86,7 +86,7 @@ func (c StandardReflectorT) ReceiverMethods(name string, receiver interface{}) (
 
 // ------------------------------------------------------------------------------
 
-func (c StandardReflectorT) IsMethodEligible(method reflect.Method) bool {
+func (c *StandardReflectorT) IsMethodEligible(method reflect.Method) bool {
 	if c.FnIsMethodEligible != nil {
 		return c.FnIsMethodEligible(method)
 	}
@@ -127,7 +127,7 @@ func (c StandardReflectorT) IsMethodEligible(method reflect.Method) bool {
 	return true
 }
 
-func (c StandardReflectorT) GetMethodName(moduleName string, r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error) {
+func (c *StandardReflectorT) GetMethodName(moduleName string, r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error) {
 	if c.FnGetMethodName != nil {
 		return c.FnGetMethodName(moduleName, r, m, funcDecl)
 	}
@@ -141,7 +141,7 @@ func (c StandardReflectorT) GetMethodName(moduleName string, r reflect.Value, m 
 	return moduleName + "." + m.Name, nil
 }
 
-func (c StandardReflectorT) GetMethodParams(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) ([]meta_schema.ContentDescriptorObject, error) {
+func (c *StandardReflectorT) GetMethodParams(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) ([]meta_schema.ContentDescriptorObject, error) {
 	if c.FnGetMethodParams != nil {
 		return c.FnGetMethodParams(r, m, funcDecl)
 	}
@@ -165,7 +165,7 @@ func (c StandardReflectorT) GetMethodParams(r reflect.Value, m reflect.Method, f
 	return []meta_schema.ContentDescriptorObject{cd}, nil
 }
 
-func (c StandardReflectorT) GetMethodResult(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (cd meta_schema.ContentDescriptorObject, err error) {
+func (c *StandardReflectorT) GetMethodResult(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (cd meta_schema.ContentDescriptorObject, err error) {
 	if c.FnGetMethodResult != nil {
 		return c.FnGetMethodResult(r, m, funcDecl)
 	}
@@ -181,7 +181,7 @@ func (c StandardReflectorT) GetMethodResult(r reflect.Value, m reflect.Method, f
 	return buildContentDescriptorObject(c, r, m, nf, ty)
 }
 
-func (c StandardReflectorT) GetMethodDescription(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error) {
+func (c *StandardReflectorT) GetMethodDescription(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error) {
 	if c.FnGetMethodDescription != nil {
 		return c.FnGetMethodDescription(r, m, funcDecl)
 	}
@@ -198,7 +198,7 @@ func (c StandardReflectorT) GetMethodDescription(r reflect.Value, m reflect.Meth
 	return fmt.Sprintf("```go\n%s\n```", string(printed)), nil
 }
 
-func (c StandardReflectorT) GetMethodSummary(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error) {
+func (c *StandardReflectorT) GetMethodSummary(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error) {
 	if c.FnGetMethodSummary != nil {
 		return c.FnGetMethodSummary(r, m, funcDecl)
 	}
@@ -208,7 +208,7 @@ func (c StandardReflectorT) GetMethodSummary(r reflect.Value, m reflect.Method, 
 	return "", nil
 }
 
-func (c StandardReflectorT) GetMethodDeprecated(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (bool, error) {
+func (c *StandardReflectorT) GetMethodDeprecated(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (bool, error) {
 	if c.FnGetMethodDeprecated != nil {
 		return c.FnGetMethodDeprecated(r, m, funcDecl)
 	}
@@ -223,7 +223,7 @@ func (c StandardReflectorT) GetMethodDeprecated(r reflect.Value, m reflect.Metho
 	return matched, nil
 }
 
-func (c StandardReflectorT) GetMethodExternalDocs(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.ExternalDocumentationObject, error) {
+func (c *StandardReflectorT) GetMethodExternalDocs(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.ExternalDocumentationObject, error) {
 	if c.FnGetMethodExternalDocs != nil {
 		return c.FnGetMethodExternalDocs(r, m, funcDecl)
 	}
@@ -249,42 +249,42 @@ func (c StandardReflectorT) GetMethodExternalDocs(r reflect.Value, m reflect.Met
 /*
 TODO: These.
 */
-func (c StandardReflectorT) GetMethodTags(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectTags, error) {
+func (c *StandardReflectorT) GetMethodTags(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectTags, error) {
 	if c.FnGetMethodTags != nil {
 		return c.FnGetMethodTags(r, m, funcDecl)
 	}
 	return nil, nil
 }
 
-func (c StandardReflectorT) GetMethodParamStructure(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error) {
+func (c *StandardReflectorT) GetMethodParamStructure(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (string, error) {
 	if c.FnGetMethodParamStructure != nil {
 		return c.FnGetMethodParamStructure(r, m, funcDecl)
 	}
 	return "by-position", nil
 }
 
-func (c StandardReflectorT) GetMethodErrors(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectErrors, error) {
+func (c *StandardReflectorT) GetMethodErrors(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectErrors, error) {
 	if c.FnGetMethodErrors != nil {
 		return c.FnGetMethodErrors(r, m, funcDecl)
 	}
 	return nil, nil
 }
 
-func (c StandardReflectorT) GetMethodServers(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.Servers, error) {
+func (c *StandardReflectorT) GetMethodServers(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.Servers, error) {
 	if c.FnGetMethodServers != nil {
 		return c.FnGetMethodServers(r, m, funcDecl)
 	}
 	return nil, nil
 }
 
-func (c StandardReflectorT) GetMethodLinks(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectLinks, error) {
+func (c *StandardReflectorT) GetMethodLinks(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectLinks, error) {
 	if c.FnGetMethodLinks != nil {
 		return c.FnGetMethodLinks(r, m, funcDecl)
 	}
 	return nil, nil
 }
 
-func (c StandardReflectorT) GetMethodExamples(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectExamples, error) {
+func (c *StandardReflectorT) GetMethodExamples(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectExamples, error) {
 	if c.FnGetMethodExamples != nil {
 		return c.FnGetMethodExamples(r, m, funcDecl)
 	}
@@ -293,7 +293,7 @@ func (c StandardReflectorT) GetMethodExamples(r reflect.Value, m reflect.Method,
 
 // ------------------------------------------------------------------------------
 
-func (c StandardReflectorT) GetContentDescriptorName(r reflect.Value, m reflect.Method, field *ast.Field) (string, error) {
+func (c *StandardReflectorT) GetContentDescriptorName(r reflect.Value, m reflect.Method, field *ast.Field) (string, error) {
 	if c.FnGetContentDescriptorName != nil {
 		return c.FnGetContentDescriptorName(r, m, field)
 	}
@@ -301,14 +301,14 @@ func (c StandardReflectorT) GetContentDescriptorName(r reflect.Value, m reflect.
 	return fs[0].Names[0].Name, nil
 }
 
-func (c StandardReflectorT) GetContentDescriptorDescription(r reflect.Value, m reflect.Method, field *ast.Field) (string, error) {
+func (c *StandardReflectorT) GetContentDescriptorDescription(r reflect.Value, m reflect.Method, field *ast.Field) (string, error) {
 	if c.FnGetContentDescriptorDescription != nil {
 		return c.FnGetContentDescriptorDescription(r, m, field)
 	}
 	return printIdentField(field), nil
 }
 
-func (c StandardReflectorT) GetContentDescriptorSummary(r reflect.Value, m reflect.Method, field *ast.Field) (string, error) {
+func (c *StandardReflectorT) GetContentDescriptorSummary(r reflect.Value, m reflect.Method, field *ast.Field) (string, error) {
 	if c.FnGetContentDescriptorSummary != nil {
 		return c.FnGetContentDescriptorSummary(r, m, field)
 	}
@@ -319,7 +319,7 @@ func (c StandardReflectorT) GetContentDescriptorSummary(r reflect.Value, m refle
 	return summary, nil
 }
 
-func (c StandardReflectorT) GetContentDescriptorRequired(r reflect.Value, m reflect.Method, field *ast.Field) (bool, error) {
+func (c *StandardReflectorT) GetContentDescriptorRequired(r reflect.Value, m reflect.Method, field *ast.Field) (bool, error) {
 	if c.FnGetContentDescriptorRequired != nil {
 		return c.FnGetContentDescriptorRequired(r, m, field)
 	}
@@ -327,7 +327,7 @@ func (c StandardReflectorT) GetContentDescriptorRequired(r reflect.Value, m refl
 	return true, nil
 }
 
-func (c StandardReflectorT) GetContentDescriptorDeprecated(r reflect.Value, m reflect.Method, field *ast.Field) (bool, error) {
+func (c *StandardReflectorT) GetContentDescriptorDeprecated(r reflect.Value, m reflect.Method, field *ast.Field) (bool, error) {
 	if c.FnGetContentDescriptorDeprecated != nil {
 		return c.FnGetContentDescriptorDeprecated(r, m, field)
 	}
@@ -345,7 +345,7 @@ func (c StandardReflectorT) GetContentDescriptorDeprecated(r reflect.Value, m re
 	return matched, nil
 }
 
-func (c StandardReflectorT) GetSchema(r reflect.Value, m reflect.Method, field *ast.Field, ty reflect.Type) (meta_schema.JSONSchema, error) {
+func (c *StandardReflectorT) GetSchema(r reflect.Value, m reflect.Method, field *ast.Field, ty reflect.Type) (meta_schema.JSONSchema, error) {
 	if c.FnGetSchema != nil {
 		return c.FnGetSchema(r, m, field, ty)
 	}
@@ -354,21 +354,21 @@ func (c StandardReflectorT) GetSchema(r reflect.Value, m reflect.Method, field *
 
 // ------------------------------------------------------------------------------
 
-func (c StandardReflectorT) SchemaIgnoredTypes() []interface{} {
+func (c *StandardReflectorT) SchemaIgnoredTypes() []interface{} {
 	if c.FnSchemaIgnoredTypes != nil {
 		return c.FnSchemaIgnoredTypes()
 	}
 	return nil
 }
 
-func (c StandardReflectorT) SchemaTypeMap() func(ty reflect.Type) *jsonschema.Type {
+func (c *StandardReflectorT) SchemaTypeMap() func(ty reflect.Type) *jsonschema.Type {
 	if c.FnSchemaTypeMap != nil {
 		return c.FnSchemaTypeMap()
 	}
 	return nil
 }
 
-func (c StandardReflectorT) SchemaMutations(ty reflect.Type) []func(*spec.Schema) error {
+func (c *StandardReflectorT) SchemaMutations(ty reflect.Type) []func(*spec.Schema) error {
 	if c.FnSchemaMutations != nil {
 		return c.FnSchemaMutations(ty)
 	}

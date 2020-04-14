@@ -41,7 +41,7 @@ func ExampleDocument_DiscoverStandard2() {
 
 	// Instantiate our document with a custom configuration.
 	doc := &Document{}
-	doc.WithMeta(MetaT{
+	doc.WithMeta(&MetaT{
 		// We're starting an ice cream store!
 		GetInfoFn: func() (info *meta_schema.InfoObject) {
 

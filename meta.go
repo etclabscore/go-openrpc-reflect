@@ -15,15 +15,15 @@ type MetaT struct {
 	GetExternalDocsFn func () (exdocs *meta_schema.ExternalDocumentationObject)
 }
 
-func (m MetaT) GetServers() func (listeners []net.Listener) (*meta_schema.Servers, error) {
+func (m *MetaT) GetServers() func (listeners []net.Listener) (*meta_schema.Servers, error) {
 	return m.GetServersFn()
 }
 
-func (m MetaT) GetInfo() func() (info *meta_schema.InfoObject) {
+func (m *MetaT) GetInfo() func() (info *meta_schema.InfoObject) {
 	return m.GetInfoFn
 }
 
-func (m MetaT) GetExternalDocs() func() (exdocs *meta_schema.ExternalDocumentationObject) {
+func (m *MetaT) GetExternalDocs() func() (exdocs *meta_schema.ExternalDocumentationObject) {
 	return m.GetExternalDocsFn
 }
 

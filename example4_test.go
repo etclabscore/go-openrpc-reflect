@@ -53,7 +53,7 @@ func ExampleDocument_DiscoverEthereum2() {
 			return nil
 		}
 	}
-	doc.WithReflector(appReflector)
+	doc.WithReflector(&appReflector)
 
 	// Register our calculator service to the rpc.Server and rpc.Doc
 	// I've grouped these together because in larger applications

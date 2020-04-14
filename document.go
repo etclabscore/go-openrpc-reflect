@@ -13,16 +13,6 @@ import (
 	meta_schema "github.com/open-rpc/meta-schema"
 )
 
-// DocumentReflector describes the interface necessary for composing
-// a complete openrpc schema-valid document.
-//
-// Since methods will be collected in memory by iterating a given receiver's (ie an RPC 'service')
-// the interface does not include a method for collecting Methods; that logic is handled
-// diredtly by the Document type, and is common to all reflection patterns (ie rpc and go-ethereum/rpc).
-type DocumentReflector interface {
-	ReceiverRegisterer
-}
-
 // MetaRegisterer implements methods that must come from the mind of the developer.
 // They describe the document (well, provide document description values) that cannot be
 // parsed from anything available.
@@ -131,7 +121,7 @@ func (d *RPC) Discover(arg RPCEthereumArg, document *meta_schema.OpenrpcDocument
 
 type Document struct {
 	meta          MetaRegisterer
-	reflector     DocumentReflector
+	reflector     ReceiverRegisterer
 	receiverNames []string
 	receivers     []interface{}
 	listeners     []net.Listener
@@ -174,7 +164,7 @@ func (d *Document) WithMeta(meta MetaRegisterer) *Document {
 	return d
 }
 
-func (d *Document) WithReflector(reflector DocumentReflector) *Document {
+func (d *Document) WithReflector(reflector ReceiverRegisterer) *Document {
 	d.reflector = reflector
 	return d
 }

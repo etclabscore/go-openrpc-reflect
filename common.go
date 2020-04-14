@@ -227,6 +227,10 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 	if err != nil {
 		return schema, err
 	}
+
+	bytes.Replace(mm, []byte(`"additionalProperties": true`), []byte(`"additionalProperties": {}`), -1)
+	bytes.Replace(mm, []byte(`"additionalProperties": false`), []byte(`"additionalProperties": {}`), -1)
+
 	err = json.Unmarshal(mm, &schema)
 	if err != nil {
 		return schema, err
@@ -263,6 +267,9 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 		if err != nil {
 			return schema, err
 		}
+
+		bytes.Replace(out, []byte(`"additionalProperties": true`), []byte(`"additionalProperties": {}`), -1)
+		bytes.Replace(out, []byte(`"additionalProperties": false`), []byte(`"additionalProperties": {}`), -1)
 
 		schema = meta_schema.JSONSchema{} // Reinitialize
 		err = json.Unmarshal(out, &schema)

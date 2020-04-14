@@ -48,7 +48,6 @@ type MethodRegisterer interface {
 	GetMethodServers(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.Servers, error)
 	GetMethodLinks(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectLinks, error)
 	GetMethodExamples(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (*meta_schema.MethodObjectExamples, error)
-
 	GetMethodParams(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) ([]meta_schema.ContentDescriptorObject, error)
 	GetMethodResult(r reflect.Value, m reflect.Method, funcDecl *ast.FuncDecl) (meta_schema.ContentDescriptorObject, error)
 }
@@ -60,7 +59,6 @@ type ContentDescriptorRegisterer interface {
 	GetContentDescriptorDescription(r reflect.Value, m reflect.Method, field *ast.Field) (string, error)
 	GetContentDescriptorRequired(r reflect.Value, m reflect.Method, field *ast.Field) (bool, error)
 	GetContentDescriptorDeprecated(r reflect.Value, m reflect.Method, field *ast.Field) (bool, error)
-
 	GetSchema(r reflect.Value, m reflect.Method, field *ast.Field, ty reflect.Type) (schema meta_schema.JSONSchema, err error)
 }
 
@@ -86,6 +84,7 @@ type SchemaRegisterer interface {
 	// SchemaTypeMap will be passed directory to the jsonschema.Reflector.TypeMapper field.
 	SchemaTypeMap() func(ty reflect.Type) *jsonschema.Type
 	// SchemaMutations will be run in a depth-first walk on the reflected schema.
+	// They will be run in order.
 	SchemaMutations(ty reflect.Type) []func(*spec.Schema) error
 }
 

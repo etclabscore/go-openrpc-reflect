@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/etclabscore/go-openrpc-refract/internal/fakemath"
+	"github.com/etclabscore/go-openrpc-reflect/internal/fakemath"
 	ethereumRPC "github.com/ethereum/go-ethereum/rpc"
 )
 

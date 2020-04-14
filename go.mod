@@ -1,4 +1,4 @@
-module github.com/etclabscore/go-openrpc-refract
+module github.com/etclabscore/go-openrpc-reflect
 
 go 1.13
 

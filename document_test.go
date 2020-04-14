@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/etclabscore/go-openrpc-refract/internal/fakemath"
+	"github.com/etclabscore/go-openrpc-reflect/internal/fakemath"
 	meta_schema "github.com/open-rpc/meta-schema"
 	"github.com/stretchr/testify/assert"
 )

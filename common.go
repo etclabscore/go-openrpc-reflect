@@ -243,10 +243,13 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 			return schema, err
 		}
 
-		a := go_jsonschema_walk.NewAnalysisT()
+		a := go_jsonschema_walk.NewWalker()
 		for _, m := range mutations {
-			m := m
-			if err := a.WalkDepthFirst(&jj, m); err != nil {
+			// Initialize the mutation the function.
+			// This way, the function is able to be aware of the mutation context,
+			// ie establish the root schema context.
+			mutFn := m(&jj)
+			if err := a.DepthFirst(&jj, mutFn); err != nil {
 				return schema, err
 			}
 		}

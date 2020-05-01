@@ -209,14 +209,6 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 
 	jsch := rflctr.ReflectFromType(ty)
 
-	// Hacky fix to make library types compatible.
-	// Not sure I fully understand the JSON Schema spec here.
-	// The libraries like to set "additionalProperties": false,
-	// but meta_schema wants it to be a JSONSchema.
-	if bytes.Equal(jsch.AdditionalProperties, []byte(`true`)) || bytes.Equal(jsch.AdditionalProperties, []byte(`false`)) {
-		jsch.AdditionalProperties = []byte(`{}`)
-	}
-
 	// Poor man's glue.
 	// Need to get the type from the go struct -> json reflector package
 	// to the swagger/go-openapi/jsonschema spec.
@@ -252,17 +244,6 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 			if err := a.DepthFirst(&jj, mutFn); err != nil {
 				return schema, err
 			}
-		}
-
-		// Same Hacky fix as above, this time with the other JSON Schema library.
-		if err := a.WalkDepthFirst(&jj, func(node *spec.Schema) error {
-			if node.AdditionalProperties != nil && node.AdditionalProperties.Schema == nil {
-				node.AdditionalProperties.Allows = false
-				node.AdditionalProperties.Schema = &spec.Schema{}
-			}
-			return nil
-		}); err != nil {
-			return schema, err
 		}
 
 		out, err := json.MarshalIndent(jj, "", "  ")

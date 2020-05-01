@@ -232,7 +232,7 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 
 	err = json.Unmarshal(mm, &schema)
 	if err != nil {
-		return schema, err
+		return schema, fmt.Errorf("unmarshal jsch error: %v\n\n%s", err, string(mm))
 	}
 
 	if mutations := registerer.SchemaMutations(ty); len(mutations) > 0 {
@@ -278,7 +278,7 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 		err = json.Unmarshal(out, &schema)
 		if err != nil {
 			fmt.Println(string(out))
-			return schema, err
+			return schema, fmt.Errorf("error: %v, schema: %s", err, string(out))
 		}
 	}
 

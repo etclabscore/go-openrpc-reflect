@@ -1,6 +1,7 @@
 package go_openrpc_reflect
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -87,4 +88,7 @@ func ExampleDocument_DiscoverStandard() {
 
 	fmt.Println(*reply.Openrpc)
 	// Output: 1.2.4
+
+	j, _ := json.MarshalIndent(reply, "", "    ")
+	log.Println(string(j))
 }

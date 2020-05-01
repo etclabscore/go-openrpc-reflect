@@ -85,7 +85,8 @@ type SchemaRegisterer interface {
 	SchemaTypeMap() func(ty reflect.Type) *jsonschema.Type
 	// SchemaMutations will be run in a depth-first walk on the reflected schema.
 	// They will be run in order.
-	SchemaMutations(ty reflect.Type) []func(*spec.Schema) error
+	// Function wrapping allows closure fn to have context of root schema.
+	SchemaMutations(ty reflect.Type) []func(*spec.Schema) func(*spec.Schema) error
 }
 
 type Service int

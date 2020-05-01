@@ -2,7 +2,6 @@ package go_openrpc_reflect
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"go/ast"
 	"go/printer"
@@ -44,7 +43,7 @@ type ReceiverReflectorT struct {
 	FnGetSchema func(r reflect.Value, m reflect.Method, field *ast.Field, ty reflect.Type) (schema meta_schema.JSONSchema, err error)
 	FnSchemaIgnoredTypes func () []interface{}
 	FnSchemaTypeMap func () func(ty reflect.Type) *jsonschema.Type
-	FnSchemaMutations func (ty reflect.Type) []func(*spec.Schema) error
+	FnSchemaMutations func (ty reflect.Type) []func (*spec.Schema) func(*spec.Schema) error
 }
 
 type StandardReflectorT struct{
@@ -368,11 +367,11 @@ func (c *StandardReflectorT) SchemaTypeMap() func(ty reflect.Type) *jsonschema.T
 	return nil
 }
 
-func (c *StandardReflectorT) SchemaMutations(ty reflect.Type) []func(*spec.Schema) error {
+func (c *StandardReflectorT) SchemaMutations(ty reflect.Type) []func(*spec.Schema) func(*spec.Schema) error {
 	if c.FnSchemaMutations != nil {
 		return c.FnSchemaMutations(ty)
 	}
-	return []func(*spec.Schema) error{
+	return []func(*spec.Schema) func(*spec.Schema) error{
 		SchemaMutationRequireDefaultOn,
 		SchemaMutationExpand,
 		SchemaMutationRemoveDefinitionsField,
@@ -381,28 +380,29 @@ func (c *StandardReflectorT) SchemaMutations(ty reflect.Type) []func(*spec.Schem
 
 // ------------------------------------------------------------------------------
 
-func SchemaMutationRemoveDefinitionsField(s *spec.Schema) error {
-	s.Definitions = nil
-	s.Ref = spec.Ref{}
-	return nil
-}
-
-func SchemaMutationExpand(s *spec.Schema) error {
-	err := spec.ExpandSchema(s, s, nil)
-	if err != nil {
-		b, _ := json.MarshalIndent(s, "", "  ")
-		return fmt.Errorf("schema Expand mutation error: %v schema:\n%s", err, string(b))
+func SchemaMutationRemoveDefinitionsField(root *spec.Schema) func (s *spec.Schema) error {
+	return func(s *spec.Schema) error {
+		s.Definitions = nil
+		s.Ref = spec.Ref{}
+		return nil
 	}
-	return nil
 }
 
-func SchemaMutationRequireDefaultOn(s *spec.Schema) error {
-	// If we didn't explicitly set any fields as required with jsonschema tags,
-	// then we can assume the default, that ALL properties are required.
-	if len(s.Required) == 0 {
-		for k := range s.Properties {
-			s.Required = append(s.Required, k)
+func SchemaMutationExpand(root *spec.Schema) func (s *spec.Schema) error {
+	return func(s *spec.Schema) error {
+		return spec.ExpandSchema(s, root, nil)
+	}
+}
+
+func SchemaMutationRequireDefaultOn(root *spec.Schema) func (s *spec.Schema) error {
+	return func(s *spec.Schema) error {
+		// If we didn't explicitly set any fields as required with jsonschema tags,
+		// then we can assume the default, that ALL properties are required.
+		if len(s.Required) == 0 {
+			for k := range s.Properties {
+				s.Required = append(s.Required, k)
+			}
 		}
+		return nil
 	}
-	return nil
 }

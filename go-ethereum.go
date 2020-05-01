@@ -1,6 +1,7 @@
 package go_openrpc_reflect
 
 import (
+	"context"
 	"go/ast"
 	"reflect"
 	"unicode"
@@ -8,7 +9,7 @@ import (
 	meta_schema "github.com/open-rpc/meta-schema"
 )
 
-type EthereumReflectorT struct{
+type EthereumReflectorT struct {
 	StandardReflectorT
 }
 
@@ -20,6 +21,8 @@ func (e *EthereumReflectorT) ReceiverMethods(name string, receiver interface{}) 
 	}
 	return receiverMethods(e, name, receiver)
 }
+
+var contextType = reflect.TypeOf((*context.Context)(nil)).Elem()
 
 // ------------------------------------------------------------------------------
 
@@ -95,6 +98,12 @@ func (e *EthereumReflectorT) GetMethodParams(r reflect.Value, m reflect.Method, 
 
 	for i, field := range expanded {
 		ty := m.Type.In(i + 1)
+
+		// go-ethereum/rpc skips the first parameter if it is context.Context,
+		// which is used for subscriptions.
+		if i+1 == 1 && ty == contextType {
+			continue
+		}
 		cd, err := buildContentDescriptorObject(e, r, m, field, ty)
 		if err != nil {
 			return nil, err

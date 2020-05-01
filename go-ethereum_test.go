@@ -208,6 +208,17 @@ func TestEthereumReflectorT_GetMethodParams(t *testing.T) {
 			count:      0,
 			params:     map[string]interface{}{},
 		},
+		{
+			// Show that when the first parameter is context.Context,
+			// it is ignored.
+			service:    &fakemath.Calculator{},
+			methodName: "SumWithContext",
+			count:      1,
+			params: map[string]interface{}{
+				"params.0.name":        "number",
+				"params.0.schema.type": "integer",
+			},
+		},
 	}
 	for _, c := range cases {
 		calcV := reflect.ValueOf(c.service)

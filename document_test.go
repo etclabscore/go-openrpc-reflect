@@ -59,7 +59,9 @@ func TestDocument_Discover(t *testing.T) {
 		d.RegisterReceiver(calculatorRPC)
 
 		out, err := d.Discover()
-		assert.NoError(t, err)
+		if !assert.NoError(t, err) {
+			t.Fatal("discover error, fatal")
+		}
 
 		b, _ := json.MarshalIndent(out, "", "  ")
 		t.Log(string(b))
@@ -87,7 +89,9 @@ func TestDocument_Discover(t *testing.T) {
 
 		listener, err := net.Listen("tcp", "127.0.0.1:0")
 		defer listener.Close()
-		assert.NoError(t, err)
+		if !assert.NoError(t, err) {
+			t.Fatal("discover error, fatal")
+		}
 
 		d.RegisterListener(listener)
 
@@ -95,7 +99,9 @@ func TestDocument_Discover(t *testing.T) {
 		d.RegisterReceiver(calculator)
 
 		out, err := d.Discover()
-		assert.NoError(t, err)
+		if !assert.NoError(t, err) {
+			t.Fatal("discover error, fatal")
+		}
 
 		b, _ := json.MarshalIndent(out, "", "  ")
 		str := string(b)

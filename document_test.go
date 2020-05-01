@@ -48,9 +48,10 @@ func TestDocument_Discover(t *testing.T) {
 	t.Run("standard", func(t *testing.T) {
 		d := newDocument().WithMeta(TestMetaRegisterer).WithReflector(StandardReflector)
 
-		listener, err := net.Listen("tcp", "127.0.0.1:3000")
-		defer listener.Close()
+		listener, err := net.Listen("tcp", "127.0.0.1:0")
 		assert.NoError(t, err)
+		assert.NotNil(t, listener)
+		defer listener.Close()
 
 		d.RegisterListener(listener)
 
@@ -67,7 +68,7 @@ func TestDocument_Discover(t *testing.T) {
 			"openrpc":                 "1.2.4",
 			"info.title":              "Calculator API",
 			"info.version":            regexp.MustCompile(time.Now().Format("2006")),
-			"servers.0.url":           "127.0.0.1:3000",
+			"servers.0.url":           listener.Addr().String(),
 			"methods.#":               float64(5),
 			"methods.0.name":          "CalculatorRPC.Add",
 			"methods.0.params.#":      float64(1),
@@ -84,7 +85,7 @@ func TestDocument_Discover(t *testing.T) {
 	t.Run("ethereum", func(t *testing.T) {
 		d := newDocument().WithMeta(TestMetaRegisterer).WithReflector(EthereumReflector)
 
-		listener, err := net.Listen("tcp", "127.0.0.1:3000")
+		listener, err := net.Listen("tcp", "127.0.0.1:0")
 		defer listener.Close()
 		assert.NoError(t, err)
 
@@ -104,7 +105,7 @@ func TestDocument_Discover(t *testing.T) {
 			"openrpc":                        "1.2.4",
 			"info.title":                     "Calculator API",
 			"info.version":                   regexp.MustCompile(time.Now().Format("2006")),
-			"servers.0.url":                  "127.0.0.1:3000",
+			"servers.0.url":                  listener.Addr().String(),
 			"methods.#":                      float64(10),
 			"methods.0.name":                 "calculator_add",
 			"methods.0.params.#":             float64(2),

@@ -13,14 +13,14 @@ import (
 )
 
 func TestStandardReflectorT_GetServers(t *testing.T) {
-	listener, err := net.Listen("tcp", "127.0.0.1:3000")
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	assert.NoError(t, err)
 
 	getServersFn := StandardReflector.GetServers()
 	servers, err := getServersFn([]net.Listener{listener})
 	assert.Len(t, ([]meta_schema.ServerObject)(*servers), 1)
 	assert.Equal(t, string(*([]meta_schema.ServerObject)(*servers)[0].Name), "tcp")
-	assert.Equal(t, string(*([]meta_schema.ServerObject)(*servers)[0].Url), "127.0.0.1:3000")
+	assert.Equal(t, string(*([]meta_schema.ServerObject)(*servers)[0].Url), listener.Addr().String())
 }
 
 func newStandardMethodTester() *MethodTester {

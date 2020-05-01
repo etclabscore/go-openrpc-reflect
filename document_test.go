@@ -112,7 +112,7 @@ func TestDocument_Discover(t *testing.T) {
 			"info.title":                     "Calculator API",
 			"info.version":                   regexp.MustCompile(time.Now().Format("2006")),
 			"servers.0.url":                  listener.Addr().String(),
-			"methods.#":                      float64(10),
+			"methods.#":                      float64(11),
 			"methods.0.name":                 "calculator_add",
 			"methods.0.params.#":             float64(2),
 			"methods.0.params.0.name":        "argA",

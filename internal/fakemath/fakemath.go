@@ -1,6 +1,7 @@
 package fakemath
 
 import (
+	"context"
 	"errors"
 	"math"
 	"math/big"
@@ -138,6 +139,13 @@ func (c *Calculator) ThreePseudoRandomNumbers() (int, int, int) {
 // the first value (go-ethereum), and returns 2 values (standard).
 func (c *Calculator) LatestError() (error, bool) {
 	return nil, true
+}
+
+// AddWithContext has context.Context as its first parameter,
+// which ethereum/go-ethereum/rpc will skip.
+func (c *Calculator) SumWithContext(ctx context.Context, number int) (int, error) {
+	t := ctx.Value("target")
+	return t.(int) + 1, nil
 }
 
 //  Implement an RPC interface for the calculator.

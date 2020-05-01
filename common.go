@@ -227,8 +227,8 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 		return schema, err
 	}
 
-	mm = bytes.Replace(mm, []byte(`"additionalProperties": true`), []byte(`"additionalProperties": {}`), -1)
-	mm = bytes.Replace(mm, []byte(`"additionalProperties": false`), []byte(`"additionalProperties": {}`), -1)
+	mm = bytes.Replace(mm, []byte(`"additionalProperties":true`), []byte(`"additionalProperties":{}`), -1)
+	mm = bytes.Replace(mm, []byte(`"additionalProperties":false`), []byte(`"additionalProperties":{}`), -1)
 
 	err = json.Unmarshal(mm, &schema)
 	if err != nil {
@@ -271,8 +271,8 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 			return schema, err
 		}
 
-		out = bytes.Replace(out, []byte(`"additionalProperties": true`), []byte(`"additionalProperties": {}`), -1)
-		out = bytes.Replace(out, []byte(`"additionalProperties": false`), []byte(`"additionalProperties": {}`), -1)
+		out = bytes.Replace(out, []byte(`"additionalProperties":true`), []byte(`"additionalProperties":{}`), -1)
+		out = bytes.Replace(out, []byte(`"additionalProperties":false`), []byte(`"additionalProperties":{}`), -1)
 
 		schema = meta_schema.JSONSchema{} // Reinitialize
 		err = json.Unmarshal(out, &schema)

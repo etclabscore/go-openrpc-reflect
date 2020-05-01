@@ -196,7 +196,7 @@ func testJSON(t *testing.T, jsonBytes []byte, want map[string]interface{}) {
 	for k, v := range want {
 		got := gjson.GetBytes(jsonBytes, k)
 		if re, ok := v.(*regexp.Regexp); ok {
-			assert.Regexp(t, re, got.Value().(string), k)
+			assert.Regexp(t, re, got.String(), k)
 		} else {
 			assert.Equal(t, v, got.Value(), k)
 		}

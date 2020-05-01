@@ -254,19 +254,7 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 			}
 		}
 
-		// Same Hacky fix as above, this time with the other JSON Schema library.
-		if err := a.DepthFirst(&jj, func(node *spec.Schema) error {
-			node.AdditionalProperties = nil
-			//if node.AdditionalProperties != nil && node.AdditionalProperties.Allows {
-			//	node.AdditionalProperties.Allows = false
-			//	node.AdditionalProperties.Schema = &spec.Schema{}
-			//}
-			return nil
-		}); err != nil {
-			return schema, err
-		}
-
-		out, err := json.MarshalIndent(jj, "", "  ")
+		out, err := json.Marshal(jj)
 		if err != nil {
 			return schema, err
 		}

@@ -196,9 +196,17 @@ func testJSON(t *testing.T, jsonBytes []byte, want map[string]interface{}) {
 	for k, v := range want {
 		got := gjson.GetBytes(jsonBytes, k)
 		if re, ok := v.(*regexp.Regexp); ok {
-			assert.Regexp(t, re, got.String(), k)
+				assert.Regexp(t, re, got.String(), k)
 		} else {
-			assert.Equal(t, v, got.Value(), k)
+			// If we expected a string, and got an array of strings,
+			// this is probably the .type, which can be either.
+			// We'll test the first item in the slice if the actual
+			// value is a slice.
+			if got.IsArray() {
+				assert.EqualValues(t, v, got.Value().([]interface{})[0].(string), k)
+			} else {
+				assert.Equal(t, v, got.Value(), k)
+			}
 		}
 	}
 }

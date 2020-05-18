@@ -297,7 +297,13 @@ func (c *StandardReflectorT) GetContentDescriptorName(r reflect.Value, m reflect
 		return c.FnGetContentDescriptorName(r, m, field)
 	}
 	fs := expandedFieldNamesFromList([]*ast.Field{field})
-	return fs[0].Names[0].Name, nil
+	name := fs[0].Names[0].Name
+
+	//// Remove '*' signifying pointers in Go.
+	//if strings.HasPrefix(name, "*") {
+	//	name = strings.TrimPrefix(name, "*")
+	//}
+	return name, nil
 }
 
 func (c *StandardReflectorT) GetContentDescriptorDescription(r reflect.Value, m reflect.Method, field *ast.Field) (string, error) {

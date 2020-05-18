@@ -16,17 +16,19 @@ func newEthereumMethodTester() *MethodTester {
 		reflector: EthereumReflector,
 		service:   &fakemath.Calculator{},
 		methods: map[string]string{
-			"HasBatteries":   "calculator_hasBatteries",
-			"Add":            "calculator_add",
-			"Mul":            "calculator_mul",
-			"BigMul":         "calculator_bigMul",
-			"Div":            "calculator_div",
-			"IsZero":         "calculator_isZero",
-			"History":        "calculator_history",
-			"Last":           "calculator_last",
-			"GetRecord":      "calculator_getRecord",
-			"Reset":          "calculator_reset",
-			"SumWithContext": "calculator_sumWithContext",
+			"HasBatteries":      "calculator_hasBatteries",
+			"Add":               "calculator_add",
+			"Mul":               "calculator_mul",
+			"BigMul":            "calculator_bigMul",
+			"Div":               "calculator_div",
+			"IsZero":            "calculator_isZero",
+			"History":           "calculator_history",
+			"Last":              "calculator_last",
+			"GetRecord":         "calculator_getRecord",
+			"Reset":             "calculator_reset",
+			"SumWithContext":    "calculator_sumWithContext",
+			"ConstructCircle":   "calculator_constructCircle",
+			"GuessAreaOfCircle": "calculator_guessAreaOfCircle",
 		},
 		deprecated: []string{"Div"},
 		descriptionMatches: map[string]string{
@@ -146,6 +148,12 @@ func TestEthereumReflectorT_ReceiverMethods(t *testing.T) {
 		`methods.#(name=="calculator_reset").params.#`:           float64(0),
 		`methods.#(name=="calculator_reset").result.name`:        "Null",
 		`methods.#(name=="calculator_reset").result.schema.type`: "null",
+
+		`methods.#(name=="calculator_constructCircle").result.name`: "*fakegeometry.Circle",
+
+		`methods.#(name=="calculator_guessAreaOfCircle").params.0.name`: "*Pi",
+		`methods.#(name=="calculator_guessAreaOfCircle").params.1.name`: "*fakegeometry.Circle",
+		`methods.#(name=="calculator_guessAreaOfCircle").result.name`:   "float64",
 	}
 
 	testJSON(t, b, jsonTests)

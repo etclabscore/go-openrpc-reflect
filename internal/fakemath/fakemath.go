@@ -5,6 +5,8 @@ import (
 	"errors"
 	"math"
 	"math/big"
+
+	"github.com/etclabscore/go-openrpc-reflect/internal/fakegeometry"
 )
 
 var CalculatorPublicMethodNames = []string{
@@ -75,6 +77,24 @@ func (c *Calculator) HasBatteries() bool {
 func (c *Calculator) Add(argA, argB int) int {
 	c.storeLatest("Add", argA, argB)
 	return 0
+}
+
+type Pi struct{}
+
+// ConstructCircle makes a circle.
+// It returns an unnamed external package type pointer.
+func (c *Calculator) ConstructCircle(x, y float64, radius float64) *fakegeometry.Circle {
+	return &fakegeometry.Circle{
+		Radius: radius,
+		X:      x,
+		Y:      y,
+	}
+}
+
+// GuessAreaOfCircle returns a pretty good guess.
+// It accepts an unnamed external package pointer as its only argument.
+func (c *Calculator) GuessAreaOfCircle(*Pi, *fakegeometry.Circle) float64 {
+	return 42
 }
 
 // Mul multiplies the arguments.

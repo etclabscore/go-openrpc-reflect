@@ -19,7 +19,7 @@ func ExampleDocument_DiscoverStandard() {
 
 	// Assign a new standard lib rpc server.
 	server := rpc.NewServer()
-
+	
 	// Set up a listener for our standard lib rpc server.
 	// Listen to TPC connections on port 1234
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -37,11 +37,6 @@ func ExampleDocument_DiscoverStandard() {
 			log.Fatal("Serve:", err)
 		}
 	}()
-
-	/*
-		-------- The non-boilerplate code. <<EOL
-		//
-	*/
 
 	// Instantiate our document with sane defaults.
 	doc := &Document{}
@@ -61,17 +56,22 @@ func ExampleDocument_DiscoverStandard() {
 	}
 	doc.RegisterReceiver(calculatorRPCService)
 
+	rpcDiscoverService := &RPC{doc}
+
+	// Want to register the rpc.discover method in the Document?
+	// Like mobius strips and infinite loops?
+	// Do you feel like a little meta-meta-meta awareness
+	// is a healthy part of a growing machine's education?
+	// Well here's how you do it.
+	// Register the discover service to itself.
+	doc.RegisterReceiverName("rpc", rpcDiscoverService)
+
 	// Now here's the good bit.
 	// Register the OpenRPC Document service back to the rpc.Server.
-	err = server.Register(doc.RPCDiscover(Standard))
+	err = server.Register(rpcDiscoverService)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	/*
-		// That's it!
-		-------- EOL
-	*/
 
 	// Now, let's test it with a client.
 	client, err := rpc.DialHTTP("tcp", listener.Addr().String())

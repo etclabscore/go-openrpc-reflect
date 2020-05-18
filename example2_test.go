@@ -97,7 +97,7 @@ func ExampleDocument_DiscoverStandard2() {
 
 	// Now here's the good bit.
 	// Register the OpenRPC Document service back to the rpc.Server.
-	err = server.Register(doc.RPCDiscover(Standard))
+	err = server.Register(&RPC{doc})
 	if err != nil {
 		log.Fatal(err)
 	}

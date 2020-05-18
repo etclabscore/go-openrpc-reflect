@@ -63,7 +63,7 @@ func ExampleDocument_DiscoverEthereum2() {
 
 	// Now here's the good bit.
 	// Register the OpenRPC Document service back to the rpc.Server.
-	err = server.RegisterName("rpc", doc.RPCDiscover(Ethereum))
+	err = server.RegisterName("rpc", &RPCEthereum{doc})
 	if err != nil {
 		log.Fatal(err)
 	}

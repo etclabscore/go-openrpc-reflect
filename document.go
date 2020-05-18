@@ -89,35 +89,13 @@ type SchemaRegisterer interface {
 	SchemaMutations(ty reflect.Type) []func(*spec.Schema) func(*spec.Schema) error
 }
 
-type Service int
+//type Service int
 
-const (
-	Standard Service = iota
-	Ethereum
-)
+//const (
+//	Standard Service = iota
+//	Ethereum
+//)
 
-type RPCEthereum struct {
-	*Document
-}
-
-func (d *RPCEthereum) Discover() (*meta_schema.OpenrpcDocument, error) {
-	return d.Document.Discover()
-}
-
-type RPC struct {
-	*Document
-}
-
-type RPCEthereumArg int
-
-func (d *RPC) Discover(arg RPCEthereumArg, document *meta_schema.OpenrpcDocument) error {
-	doc, err := d.Document.Discover()
-	if err != nil {
-		return err
-	}
-	*document = *doc
-	return err
-}
 
 type Document struct {
 	meta          MetaRegisterer
@@ -127,15 +105,15 @@ type Document struct {
 	listeners     []net.Listener
 }
 
-func (d *Document) RPCDiscover(kind Service) (receiver interface{}) {
-	switch kind {
-	case Standard:
-		return &RPC{d}
-	case Ethereum:
-		return &RPCEthereum{d}
-	}
-	return nil
-}
+//func (d *Document) RPCDiscover(kind Service) (receiver interface{}) {
+//	switch kind {
+//	case Standard:
+//		return &RPC{d}
+//	case Ethereum:
+//		return &RPCEthereum{d}
+//	}
+//	return nil
+//}
 
 func (d *Document) RegisterReceiver(receiver interface{}) {
 	d.RegisterReceiverName("", receiver)

@@ -229,7 +229,7 @@ func buildContentDescriptorObject(registerer ContentDescriptorRegisterer, r refl
 
 func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m reflect.Method, field *ast.Field, ty reflect.Type) (schema meta_schema.JSONSchema, err error) {
 	if !jsonschemaPkgSupport(ty) {
-		err = json.Unmarshal([]byte(`{"type": "object", "title": "unsupported-type-by-jsonschema"}`), &schema)
+		err = json.Unmarshal([]byte(`{"type": "object", "title": "typeUnsupportedByJSONSchema"}`), &schema)
 		return
 	}
 

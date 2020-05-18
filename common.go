@@ -182,6 +182,40 @@ func buildContentDescriptorObject(registerer ContentDescriptorRegisterer, r refl
 		return cd, err
 	}
 
+	//// If name == description, eg. 'hexutil.Bytes' == 'hexutil.Bytes',
+	//// that means the field represent an unnamed variable. Mostly likely an unnamed return value.
+	//// Assigning a content descriptor name as a Go type name may be undesirable,
+	//// particularly since the 'name' field is used in by-name paramStructure cases to key
+	//// the parameter object.
+	//// So instead of using this default, let's set the name value to be something
+	//// generic given the context of the schema instead.
+	////
+	//if name == description {
+	//	// Field is unnamed.
+	//	if schema.Title != nil {
+	//		name = (string)(*schema.Title)
+	//	} else if schema.Type != nil {
+	//		if schema.Type.UnorderedSetOfAny17L18NF5VWcS9ROi != nil {
+	//			u := schema.Type.UnorderedSetOfAny17L18NF5VWcS9ROi
+	//			uu := *u
+	//			a := uu[0]
+	//			n, ok := a.(string)
+	//			if !ok {
+	//				panic("notok1")
+	//			}
+	//			name = n
+	//		} else if schema.Type.Any17L18NF5 != nil {
+	//			a := schema.Type.Any17L18NF5
+	//			aa := *a
+	//			n, ok := aa.(string)
+	//			if !ok {
+	//				panic("notok2")
+	//			}
+	//			name = n
+	//		}
+	//	}
+	//}
+
 	cd = meta_schema.ContentDescriptorObject{
 		Name:        (*meta_schema.ContentDescriptorObjectName)(&name),
 		Description: (*meta_schema.ContentDescriptorObjectDescription)(&description),

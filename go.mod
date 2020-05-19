@@ -13,7 +13,8 @@ require (
 	github.com/tidwall/gjson v1.6.0
 )
 
-//replace github.com/open-rpc/meta-schema => github.com/meowsbits/meta-schema v0.0.42
-replace github.com/open-rpc/meta-schema => /home/ia/dev/open-rpc/meta-schema
+replace github.com/open-rpc/meta-schema => github.com/meowsbits/meta-schema v0.0.42
+
+//HACKING:replace github.com/open-rpc/meta-schema => /home/ia/dev/open-rpc/meta-schema
 
 replace github.com/alecthomas/jsonschema => github.com/etclabscore/go-jsonschema-reflect v0.0.2

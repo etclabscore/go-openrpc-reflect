@@ -74,7 +74,7 @@ func TestStandardReflectorT_ReceiverMethods(t *testing.T) {
 		`methods.#(name=="CalculatorRPC.Add").deprecated`:                        false,
 		`methods.#(name=="CalculatorRPC.Add").params.#`:                          float64(1),
 		`methods.#(name=="CalculatorRPC.Add").params.0.name`:                     "arg",
-		`methods.#(name=="CalculatorRPC.Add").params.0.description`:              "AddArg",
+		`methods.#(name=="CalculatorRPC.Add").params.0.description`:              "PlusOneArg",
 		`methods.#(name=="CalculatorRPC.Add").params.0.required`:                 true,
 		`methods.#(name=="CalculatorRPC.Add").params.0.deprecated`:               false,
 		`methods.#(name=="CalculatorRPC.Add").params.0.schema.type`:              "object",
@@ -82,7 +82,7 @@ func TestStandardReflectorT_ReceiverMethods(t *testing.T) {
 		`methods.#(name=="CalculatorRPC.Add").params.0.schema.properties.b.type`: "integer",
 		`methods.#(name=="CalculatorRPC.Add").params.0.schema.definitions`:       nil,
 		`methods.#(name=="CalculatorRPC.Add").result.name`:                       "reply",
-		`methods.#(name=="CalculatorRPC.Add").result.description`:                "*AddReply",
+		`methods.#(name=="CalculatorRPC.Add").result.description`:                "*PlusOneReply",
 		`methods.#(name=="CalculatorRPC.Add").result.schema.type`:                "integer",
 		`methods.#(name=="CalculatorRPC.Add").externalDocs.description`:          regexp.MustCompile(`(?m)^Github remote link$`),
 		`methods.#(name=="CalculatorRPC.Add").externalDocs.url`:                  regexp.MustCompile(`(?m)^http.*github.*fakemath.*fakemath\.go`),
@@ -136,7 +136,7 @@ func TestStandardReflectorT_ContentDescriptor(t *testing.T) {
 				true,
 				1,
 			},
-			want: map[string]string{"name": "reply", "summary": "", "description": "*AddReply"},
+			want: map[string]string{"name": "reply", "summary": "", "description": "*PlusOneReply"},
 		},
 		{
 			ContentDescriptorSelector: ContentDescriptorSelector{
@@ -274,7 +274,7 @@ func TestStandardReflectorT_GetMethodParams(t *testing.T) {
 			params: []map[string]interface{}{
 				map[string]interface{}{
 					"name":                     "arg",
-					"description":              "AddArg",
+					"description":              "PlusOneArg",
 					"summary":                  "",
 					"required":                 true,
 					"deprecated":               false,
@@ -337,7 +337,7 @@ func TestStandardReflectorT_GetMethodResult(t *testing.T) {
 			methodName: "Add",
 			result: map[string]interface{}{
 				"name":        "reply",
-				"description": "*AddReply",
+				"description": "*PlusOneReply",
 				"summary":     "",
 				"schema.type": "integer",
 			},

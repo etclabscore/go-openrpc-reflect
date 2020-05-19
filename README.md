@@ -1,3 +1,37 @@
+# go-openrpc-reflect
+
+Use reflection to generate OpenRPC service descriptions from static code and at runtime.
+
+:construction: __WARNING__ This is a work in progress, and is being actively developed.
+Not recommended yet for production use.
+
+
+- [GoDocs](https://pkg.go.dev/mod/github.com/etclabscore/go-openrpc-reflect)
+
+## Theory
+
+Go's `net/rpc` service works by using a code-style convention
+to structure a reflection-based implementation to build RPC servers around business logic.
+
+This package works in a similar way, but instead of building RPC servers, it builds service descriptions
+(of those servers) which meet the [OpenRPC Specification](https://spec.open-rpc.org/). Differentially, this package
+doesn't strictly enforce any specific code-style conventions, but provides a (hopefully) extensible pattern
+that can be moulded to fit nearly any RPC service implementation, whether hand-rolled or conventional. (Relatively) sane defaults
+are provided fitting the conventions of the most popular Go RPC libraries.
+
+This is intended to open the door to OpenRPC adoption -- and service discovery patterns in general -- by removing the 
+hurdle of requiring a human to actually sit down and write (and maintain) a complete and correct description of
+potentially complex services.
+
+It enables APIs to provide accurate, complete, _and dynamic_ descriptions of themselves
+which can adapt to varying permissions and visibility scopes, potentially numerous and diverse server businesses, 
+and different transport contexts.
+
+## Example
+
+This example is taken directly from [./example1_test.go](./example1_test.go). Please peruse the other ./example\* files if you're curious.
+
+```go
 package go_openrpc_reflect
 
 import (
@@ -190,3 +224,57 @@ func ExampleDocument_DiscoverStandard() {
 	log.Println(string(j))
 	// TADA!
 }
+
+```
+
+Running this Example test yields the following response:
+
+```txt
+=== RUN   ExampleDocument_DiscoverStandard
+2020/05/18 18:49:24 Serving RPC server on port 127.0.0.1:40861
+2020/05/18 18:49:24 43
+2020/05/18 18:49:24 {
+    "openrpc": "1.2.4",
+    "info": null,
+    "methods": [
+        {
+            "name": "MyCalculator.PlusOne",
+            "description": "```go\nfunc (c *MyCalculator) PlusOne(arg *PlusOneArg, reply *PlusOneReply) error {\n\tif arg == nil {\n\t\treturn errBadUse\n\t}\n\tanswer := *arg + 1\n\tc.history = append(c.history, int(answer))\n\t*reply = (PlusOneReply)(answer)\n\treturn nil\n}// PlusOne is deceivingly simple function that increments any value by 1.\n\n```",
+            "summary": "PlusOne is deceivingly simple function that increments any value by 1.\n",
+            "paramStructure": "by-position",
+            "params": [
+                {
+                    "name": "arg",
+                    "description": "*PlusOneArg",
+                    "schema": {
+                        "type": "integer"
+                    },
+                    "required": true
+                }
+            ],
+            "result": {
+                "name": "reply",
+                "description": "*PlusOneReply",
+                "schema": {
+                    "type": "integer"
+                },
+                "required": true
+            },
+            "externalDocs": {
+                "description": "Github remote link",
+                "url": "https://github.com/etclabscore/go-openrpc-reflect/blob/master/example1_test.go#L36"
+            }
+        }
+    ]
+}
+--- PASS: ExampleDocument_DiscoverStandard (0.00s)
+PASS
+
+```
+
+![example-screenshot](2020-05-18-185019_1897x981_screenshot.png)
+
+
+The generated OpenRPC service description document can be seen at the OpenRPC Playground at https://playground.open-rpc.org/?url=https://gist.githubusercontent.com/meowsbits/986d6afdfb5c8ccb9f7afde80f8123cc/raw/mycalculator.openrpc.json.
+
+Note that the Playground will complain about an empty `info` field; we left it empty for the sake of brevity.

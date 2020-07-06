@@ -53,8 +53,8 @@ github.com/edsrzf/mmap-go v0.0.0-20160512033002-935e0e8a636c/go.mod h1:YO35OhQPt
 github.com/elastic/gosigar v0.8.1-0.20180330100440-37f05ff46ffa/go.mod h1:cdorVVzy1fhmEqmtgqkoE3bYtCfSCkVyjTyCIo22xvs=
 github.com/etclabscore/go-jsonschema-reflect v0.0.2 h1:4cVcR6pyHT+fdUhqUej9OvlQjo7IvdZZ57yXFLwp7Lk=
 github.com/etclabscore/go-jsonschema-reflect v0.0.2/go.mod h1:zNMg3LbT7+7+1sJl6meG0U55ipDR9d0RN0dYQ8V3uCs=
-github.com/etclabscore/go-jsonschema-walk v0.0.5 h1:onCqRkan6UYqxb2AfQCnrH3RDLxE7N1dsNBD99ruZ2A=
-github.com/etclabscore/go-jsonschema-walk v0.0.5/go.mod h1:ONvrTA7ocniep83ygMhbeTweRpaEIH8Ei/D/2OKgu6U=
+github.com/etclabscore/go-jsonschema-reflect v0.0.3 h1:4g3D23tQqZzo7T5q0DyMrpQJSARifl27nVIkbP6rQeE=
+github.com/etclabscore/go-jsonschema-reflect v0.0.3/go.mod h1:zNMg3LbT7+7+1sJl6meG0U55ipDR9d0RN0dYQ8V3uCs=
 github.com/etclabscore/go-jsonschema-walk v0.0.6 h1:DrNzoKWKd8f8XB5nFGBY00IcjakRE22OTI12k+2LkyY=
 github.com/etclabscore/go-jsonschema-walk v0.0.6/go.mod h1:VdfDY72AFAiUhy0ZXEaWSpveGjMT5JcDIm903NGqFwQ=
 github.com/ethereum/go-ethereum v1.9.12 h1:EPtimwsp/KGDSiXcNunzsI4kefdsMHZGJntKx3fvbaI=
@@ -124,8 +124,8 @@ github.com/mattn/go-isatty v0.0.5-0.20180830101745-3fb116b82035/go.mod h1:M+lRXT
 github.com/mattn/go-runewidth v0.0.3/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/meowsbits/meta-schema v0.0.42 h1:QBVTM7TjN81nTExoij1++yaQRol0Mw2RSeNmGsr+5Pw=
-github.com/meowsbits/meta-schema v0.0.42/go.mod h1:Ag6rSXkHIckQmjFBCweJEEt1mrTPBv8b9W4aU/NQWfI=
+github.com/meowsbits/meta-schema v0.0.43 h1:USH4ByON2tESO9KeLdWqeNPEALAruDbkE1/IVmh0IT8=
+github.com/meowsbits/meta-schema v0.0.43/go.mod h1:Ag6rSXkHIckQmjFBCweJEEt1mrTPBv8b9W4aU/NQWfI=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/naoina/go-stringutil v0.1.0/go.mod h1:XJ2SJL9jCtBh+P9q5btrd/Ylo8XwT/h1USek5+NqSA0=
 github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416/go.mod h1:NBIhNtsFMo3G2szEBne+bO4gS192HuIYRqfvOWb4i1E=

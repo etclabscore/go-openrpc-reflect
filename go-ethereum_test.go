@@ -42,7 +42,7 @@ func newEthereumMethodTester() *MethodTester {
 			"SumWithContext": `Context as its first parameter`,
 		},
 		externalDocsMatches: map[string]string{
-			"BigMul": `(?m)^https\:\/\/.*\.com.*\/internal\/fakemath\/fakemath\.go\#L\d+`,
+			"BigMul": `(?m)^https\:\/\/.*\.com.*\/internal\/fakearithmetic\/fakearithmetic\.go\#L\d+`,
 		},
 	}
 }
@@ -116,7 +116,7 @@ func TestEthereumReflectorT_ReceiverMethods(t *testing.T) {
 		`methods.#(name=="calculator_add").result.description`:       "int",
 		`methods.#(name=="calculator_add").result.schema.type`:       "integer",
 		`methods.#(name=="calculator_add").externalDocs.description`: regexp.MustCompile(`(?m)^Github remote link$`),
-		`methods.#(name=="calculator_add").externalDocs.url`:         regexp.MustCompile(`(?m)^http.*github.*fakemath.*fakemath\.go`),
+		`methods.#(name=="calculator_add").externalDocs.url`:         regexp.MustCompile(`(?m)^http.*github.*fakearithmetic.*fakearithmetic\.go`),
 
 		`methods.#(name=="calculator_bigMul").name`:                                 "calculator_bigMul",
 		`methods.#(name=="calculator_bigMul").summary`:                              regexp.MustCompile(`returns.*the product of.*`),

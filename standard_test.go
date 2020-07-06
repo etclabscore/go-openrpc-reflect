@@ -46,7 +46,7 @@ func newStandardMethodTester() *MethodTester {
 			"IsZero":       `throwaway parameters`,
 		},
 		externalDocsMatches: map[string]string{
-			"BigMul": `(?m)^https\:\/\/.*\.com.*\/internal\/fakemath\/fakemath\.go\#L\d+`,
+			"BigMul": `(?m)^https\:\/\/.*\.com.*\/internal\/fakearithmetic\/fakearithmetic\.go\#L\d+`,
 		},
 	}
 }
@@ -85,7 +85,7 @@ func TestStandardReflectorT_ReceiverMethods(t *testing.T) {
 		`methods.#(name=="CalculatorRPC.Add").result.description`:                "*AddReply",
 		`methods.#(name=="CalculatorRPC.Add").result.schema.type`:                "integer",
 		`methods.#(name=="CalculatorRPC.Add").externalDocs.description`:          regexp.MustCompile(`(?m)^Github remote link$`),
-		`methods.#(name=="CalculatorRPC.Add").externalDocs.url`:                  regexp.MustCompile(`(?m)^http.*github.*fakemath.*fakemath\.go`),
+		`methods.#(name=="CalculatorRPC.Add").externalDocs.url`:                  regexp.MustCompile(`(?m)^http.*github.*fakearithmetic.*fakearithmetic\.go`),
 
 		`methods.#(name=="CalculatorRPC.BigMul").name`:                              "CalculatorRPC.BigMul",
 		`methods.#(name=="CalculatorRPC.BigMul").params.#`:                          float64(1),

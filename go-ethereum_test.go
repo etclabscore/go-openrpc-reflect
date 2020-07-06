@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/etclabscore/go-openrpc-reflect/internal/fakemath"
+	"github.com/etclabscore/go-openrpc-reflect/internal/fakearithmetic"
 	meta_schema "github.com/open-rpc/meta-schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +14,7 @@ import (
 func newEthereumMethodTester() *MethodTester {
 	return &MethodTester{
 		reflector: EthereumReflector,
-		service:   &fakemath.Calculator{},
+		service:   &fakearithmetic.Calculator{},
 		methods: map[string]string{
 			"HasBatteries":      "calculator_hasBatteries",
 			"Add":               "calculator_add",
@@ -60,7 +60,7 @@ func TestEthereumReflectorT_IsMethodEligible(t *testing.T) {
 		"Last",
 		"GetRecord",
 	} {
-		method, ok := reflect.TypeOf(&fakemath.Calculator{}).MethodByName(m)
+		method, ok := reflect.TypeOf(&fakearithmetic.Calculator{}).MethodByName(m)
 		assert.True(t, ok)
 		assert.True(t, EthereumReflector.IsMethodEligible(method), method.Name)
 	}
@@ -69,7 +69,7 @@ func TestEthereumReflectorT_IsMethodEligible(t *testing.T) {
 		"ThreePseudoRandomNumbers",
 		"LatestError",
 	} {
-		method, ok := reflect.TypeOf(&fakemath.Calculator{}).MethodByName(m)
+		method, ok := reflect.TypeOf(&fakearithmetic.Calculator{}).MethodByName(m)
 		assert.True(t, ok)
 		assert.False(t, EthereumReflector.IsMethodEligible(method), method.Name)
 	}
@@ -83,7 +83,7 @@ func newEthereumContentDescriptorTester() *ContentDescriptorSelector {
 }
 
 func TestEthereumReflectorT_ReceiverMethods(t *testing.T) {
-	methods, err := EthereumReflector.ReceiverMethods("", &fakemath.Calculator{})
+	methods, err := EthereumReflector.ReceiverMethods("", &fakearithmetic.Calculator{})
 	if !assert.NoError(t, err) {
 		t.Fatal("ethereum methods")
 	}
@@ -161,7 +161,7 @@ func TestEthereumReflectorT_ReceiverMethods(t *testing.T) {
 
 func TestEthereumReflectorT_GetMethodParams(t *testing.T) {
 	reflector := EthereumReflector
-	service := &fakemath.Calculator{}
+	service := &fakearithmetic.Calculator{}
 	cases := []struct {
 		service    interface{}
 		methodName string
@@ -191,7 +191,7 @@ func TestEthereumReflectorT_GetMethodParams(t *testing.T) {
 			},
 		},
 		{
-			service:    &fakemath.Calculator{},
+			service:    &fakearithmetic.Calculator{},
 			methodName: "BigMul",
 			count:      2,
 			params: map[string]interface{}{
@@ -211,7 +211,7 @@ func TestEthereumReflectorT_GetMethodParams(t *testing.T) {
 			},
 		},
 		{
-			service:    &fakemath.Calculator{},
+			service:    &fakearithmetic.Calculator{},
 			methodName: "HasBatteries",
 			count:      0,
 			params:     map[string]interface{}{},
@@ -219,7 +219,7 @@ func TestEthereumReflectorT_GetMethodParams(t *testing.T) {
 		{
 			// Show that when the first parameter is context.Context,
 			// it is ignored.
-			service:    &fakemath.Calculator{},
+			service:    &fakearithmetic.Calculator{},
 			methodName: "SumWithContext",
 			count:      1,
 			params: map[string]interface{}{
@@ -255,7 +255,7 @@ func TestEthereumReflectorT_GetMethodParams(t *testing.T) {
 
 func TestEthereumReflectorT_GetMethodResult(t *testing.T) {
 	reflector := EthereumReflector
-	service := &fakemath.Calculator{}
+	service := &fakearithmetic.Calculator{}
 	cases := []struct {
 		service    interface{}
 		methodName string

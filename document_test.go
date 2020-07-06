@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/etclabscore/go-openrpc-reflect/internal/fakemath"
+	"github.com/etclabscore/go-openrpc-reflect/internal/fakearithmetic"
 	meta_schema "github.com/open-rpc/meta-schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -55,7 +55,7 @@ func TestDocument_Discover(t *testing.T) {
 
 		d.RegisterListener(listener)
 
-		calculatorRPC := new(fakemath.CalculatorRPC)
+		calculatorRPC := new(fakearithmetic.CalculatorRPC)
 		d.RegisterReceiver(calculatorRPC)
 
 		out, err := d.Discover()
@@ -95,7 +95,7 @@ func TestDocument_Discover(t *testing.T) {
 
 		d.RegisterListener(listener)
 
-		calculator := new(fakemath.Calculator)
+		calculator := new(fakearithmetic.Calculator)
 		d.RegisterReceiver(calculator)
 
 		out, err := d.Discover()

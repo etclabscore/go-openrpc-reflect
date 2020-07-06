@@ -1,4 +1,4 @@
-package fakemath
+package fakearithmetic
 
 import (
 	"context"

@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"net/rpc"
 
-	"github.com/etclabscore/go-openrpc-reflect/internal/fakemath"
+	"github.com/etclabscore/go-openrpc-reflect/internal/fakearithmetic"
 	meta_schema "github.com/open-rpc/meta-schema"
 )
 
 // ExampleDocument_DiscoverStandard2 demonstrates an OpenRPC rpc/document
 // implementation with a custom configuration.
 func ExampleDocument_DiscoverStandard2() {
-	calculatorRPCService := new(fakemath.CalculatorRPC)
+	calculatorRPCService := new(fakearithmetic.CalculatorRPC)
 
 	// Assign a new standard lib rpc server.
 	server := rpc.NewServer()

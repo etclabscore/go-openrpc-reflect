@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/alecthomas/jsonschema"
-	"github.com/etclabscore/go-openrpc-reflect/internal/fakemath"
+	"github.com/etclabscore/go-openrpc-reflect/internal/fakearithmetic"
 	ethereumRPC "github.com/ethereum/go-ethereum/rpc"
 	"github.com/tidwall/gjson"
 )
@@ -24,7 +24,7 @@ func ExampleDocument_DiscoverEthereum2() {
 	// Ethereum has different opinions about how to register methods of a receiver
 	// to make an RPC service, so we don't need to use the wrapper the standard way
 	// requires.
-	calculatorService := new(fakemath.Calculator)
+	calculatorService := new(fakearithmetic.Calculator)
 
 	err := server.RegisterName("calculator", calculatorService)
 	if err != nil {

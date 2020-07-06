@@ -148,7 +148,7 @@ func ExampleDocument_DiscoverStandard() {
 	// and receiver registration is often done in a loop.
 	// NOTE that net/rpc will log warnings like:
 	//   > rpc.Register: method "BrokenReset" has 1 input parameters; needs exactly three'
-	// This is because internal/fakemath has spurious methods for testing this package.
+	// This is because internal/fakearithmetic has spurious methods for testing this package.
 
 	err = server.Register(calculatorRPCService) // <- Register the receiver to the net/rpc server.
 	if err != nil {

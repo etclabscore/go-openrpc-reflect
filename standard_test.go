@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/etclabscore/go-openrpc-reflect/internal/fakemath"
+	"github.com/etclabscore/go-openrpc-reflect/internal/fakearithmetic"
 	meta_schema "github.com/open-rpc/meta-schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +26,7 @@ func TestStandardReflectorT_GetServers(t *testing.T) {
 func newStandardMethodTester() *MethodTester {
 	return &MethodTester{
 		reflector: StandardReflector,
-		service:   &fakemath.CalculatorRPC{},
+		service:   &fakearithmetic.CalculatorRPC{},
 		methods: map[string]string{
 			"HasBatteries": "CalculatorRPC.HasBatteries",
 			"Add":          "CalculatorRPC.Add",
@@ -52,7 +52,7 @@ func newStandardMethodTester() *MethodTester {
 }
 
 func TestStandardReflectorT_ReceiverMethods(t *testing.T) {
-	methods, err := StandardReflector.ReceiverMethods("", &fakemath.CalculatorRPC{})
+	methods, err := StandardReflector.ReceiverMethods("", &fakearithmetic.CalculatorRPC{})
 	if !assert.NoError(t, err) {
 		t.Fatal("standard methods")
 	}
@@ -121,7 +121,7 @@ func TestStandardReflectorT_ContentDescriptor(t *testing.T) {
 		{
 			ContentDescriptorSelector: ContentDescriptorSelector{
 				StandardReflector,
-				&fakemath.CalculatorRPC{},
+				&fakearithmetic.CalculatorRPC{},
 				"HasBatteries",
 				true,
 				0,
@@ -131,7 +131,7 @@ func TestStandardReflectorT_ContentDescriptor(t *testing.T) {
 		{
 			ContentDescriptorSelector: ContentDescriptorSelector{
 				StandardReflector,
-				&fakemath.CalculatorRPC{},
+				&fakearithmetic.CalculatorRPC{},
 				"Add",
 				true,
 				1,
@@ -141,7 +141,7 @@ func TestStandardReflectorT_ContentDescriptor(t *testing.T) {
 		{
 			ContentDescriptorSelector: ContentDescriptorSelector{
 				EthereumReflector,
-				&fakemath.Calculator{},
+				&fakearithmetic.Calculator{},
 				"HasBatteries",
 				false,
 				0,
@@ -151,7 +151,7 @@ func TestStandardReflectorT_ContentDescriptor(t *testing.T) {
 		{
 			ContentDescriptorSelector: ContentDescriptorSelector{
 				EthereumReflector,
-				&fakemath.Calculator{},
+				&fakearithmetic.Calculator{},
 				"Add",
 				true,
 				0,
@@ -205,7 +205,7 @@ func TestStandardReflectorT_GetSchema(t *testing.T) {
 			SchemaSelector: SchemaSelector{
 				ContentDescriptorSelector: ContentDescriptorSelector{
 					StandardReflector,
-					&fakemath.CalculatorRPC{},
+					&fakearithmetic.CalculatorRPC{},
 					"HasBatteries",
 					true,
 					0,
@@ -217,7 +217,7 @@ func TestStandardReflectorT_GetSchema(t *testing.T) {
 			SchemaSelector: SchemaSelector{
 				ContentDescriptorSelector: ContentDescriptorSelector{
 					StandardReflector,
-					&fakemath.CalculatorRPC{},
+					&fakearithmetic.CalculatorRPC{},
 					"BigMul",
 					true,
 					1,
@@ -269,7 +269,7 @@ func TestStandardReflectorT_GetMethodParams(t *testing.T) {
 		params     []map[string]interface{}
 	}{
 		{
-			service:    &fakemath.CalculatorRPC{},
+			service:    &fakearithmetic.CalculatorRPC{},
 			methodName: "Add",
 			params: []map[string]interface{}{
 				map[string]interface{}{
@@ -285,7 +285,7 @@ func TestStandardReflectorT_GetMethodParams(t *testing.T) {
 			},
 		},
 		{
-			service:    &fakemath.CalculatorRPC{},
+			service:    &fakearithmetic.CalculatorRPC{},
 			methodName: "Div",
 			params: []map[string]interface{}{
 				map[string]interface{}{
@@ -333,7 +333,7 @@ func TestStandardReflectorT_GetMethodResult(t *testing.T) {
 		result     map[string]interface{}
 	}{
 		{
-			service:    &fakemath.CalculatorRPC{},
+			service:    &fakearithmetic.CalculatorRPC{},
 			methodName: "Add",
 			result: map[string]interface{}{
 				"name":        "reply",
@@ -343,7 +343,7 @@ func TestStandardReflectorT_GetMethodResult(t *testing.T) {
 			},
 		},
 		{
-			service:    &fakemath.CalculatorRPC{},
+			service:    &fakearithmetic.CalculatorRPC{},
 			methodName: "Div",
 			result: map[string]interface{}{
 				"name":        "reply",

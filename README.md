@@ -17,7 +17,7 @@ This package works in a similar way, but instead of building RPC servers, it bui
 (of those servers) which meet the [OpenRPC Specification](https://spec.open-rpc.org/). Differentially, this package
 doesn't strictly enforce any specific code-style conventions, but provides a (hopefully) extensible pattern
 that can be moulded to fit nearly any RPC service implementation, whether hand-rolled or conventional. (Relatively) sane defaults
-are provided fitting the conventions of the most popular Go RPC libraries.
+are provided fitting the conventions of popular Go RPC libraries, namely `net/rpc` and `ethereum/go-ethereum/rpc`.
 
 This is intended to open the door to OpenRPC adoption -- and service discovery patterns in general -- by removing the 
 hurdle of requiring a human to actually sit down and write (and maintain) a complete and correct description of
@@ -27,12 +27,55 @@ It enables APIs to provide accurate, complete, _and dynamic_ descriptions of the
 which can adapt to varying permissions and visibility scopes, potentially numerous and diverse server businesses, 
 and different transport contexts.
 
-## Example
-
-This example is taken directly from [./example1_test.go](./example1_test.go). Please peruse the other ./example\* files if you're curious.
+## Short Example
 
 ```go
-package go_openrpc_reflect
+    // Follow the standard Go RPC service establishment pattern.
+    calculatorRPCService := new(MyCalculator)
+    server := rpc.NewServer()
+    // Register the receiver to the net/rpc server.
+    err = server.Register(calculatorRPCService)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Instantiate our document with sane defaults.
+    doc := &go_openrpc_reflect.Document{}
+    // Set up some minimum-viable application-specific information.
+    doc.WithMeta(&go_openrpc_reflect.MetaT{
+        GetServersFn: func() func(listeners []net.Listener) (*meta_schema.Servers, error) {
+            return func([]net.Listener) (*meta_schema.Servers, error) { return nil, nil }
+        },
+        GetInfoFn: func() (info *meta_schema.InfoObject) {
+            return nil
+        },
+        GetExternalDocsFn: func() (exdocs *meta_schema.ExternalDocumentationObject) {
+            return nil
+        },
+    })
+    // Use a provided default Standard reflector pattern.
+    doc.WithReflector(go_openrpc_reflect.StandardReflector)
+    
+    // Register the receiver to the doc.
+    doc.RegisterReceiver(calculatorRPCService)
+
+    // Wrap the document in a very simple default 'RPC' service struct, which provides one method: Discover,
+    // which returns the doc.Discover() value.
+    rpcDiscoverService := &RPC{doc}
+
+    // Register the OpenRPC Document service back to the rpc.Server.
+    err = server.Register(rpcDiscoverService)
+    if err != nil {
+        log.Fatal(err)
+    }
+```
+
+## Full Example
+
+This example is taken directly from [./examples/example1_test.go](./examples/example1_test.go). Please read the other test cases in examples/ to see more implementation options.
+
+```go
+package examples
 
 import (
 	"encoding/json"
@@ -43,6 +86,7 @@ import (
 	"net/http"
 	"net/rpc"
 
+	go_openrpc_reflect "github.com/etclabscore/go-openrpc-reflect"
 	meta_schema "github.com/open-rpc/meta-schema"
 )
 
@@ -89,7 +133,7 @@ func ExampleDocument_DiscoverStandard() {
 
 	// Assign a new standard lib rpc server.
 	server := rpc.NewServer()
-	
+
 	// Set up a listener for our standard lib rpc server.
 	// Listen to TPC connections on any open port.
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -109,7 +153,7 @@ func ExampleDocument_DiscoverStandard() {
 	}()
 
 	// Instantiate our document with sane defaults.
-	doc := &Document{}
+	doc := &go_openrpc_reflect.Document{}
 
 	// Set up some minimum-viable application-specific information.
 	// These are 3 fields grouped as 'Meta' in the case are server and application-specific data
@@ -124,7 +168,7 @@ func ExampleDocument_DiscoverStandard() {
 	// an OpenRPC document to be 'valid' by spec (they're *required*), but this is just to
 	// show that these are the only things that you have to actually think about
 	// and we don't really care about meeting spec in a simple example.
-	doc.WithMeta(&MetaT{
+	doc.WithMeta(&go_openrpc_reflect.MetaT{
 		GetServersFn: func() func(listeners []net.Listener) (*meta_schema.Servers, error) {
 			return func([]net.Listener) (*meta_schema.Servers, error) { return nil, nil }
 		},
@@ -140,7 +184,7 @@ func ExampleDocument_DiscoverStandard() {
 	// This is a sane default supplied by the library which fits Go's net/rpc reflection conventions.
 	// If you want, you can also roll your own, or edit pretty much any part of this standard object you want.
 	// Highly tweakable.
-	doc.WithReflector(StandardReflector)
+	doc.WithReflector(go_openrpc_reflect.StandardReflector)
 
 	// Register our calculator service to the rpc.Server and rpc.Doc
 	// I've grouped these together because in larger applications
@@ -272,9 +316,6 @@ PASS
 
 ```
 
+Which can then be copy-pasted into the [OpenRPC Playground](https://playground.open-rpc.org/?url=https://gist.githubusercontent.com/meowsbits/986d6afdfb5c8ccb9f7afde80f8123cc/raw/mycalculator.openrpc.json) for review: 
+
 ![example-screenshot](2020-05-18-185019_1897x981_screenshot.png)
-
-
-The generated OpenRPC service description document can be seen at the OpenRPC Playground at https://playground.open-rpc.org/?url=https://gist.githubusercontent.com/meowsbits/986d6afdfb5c8ccb9f7afde80f8123cc/raw/mycalculator.openrpc.json.
-
-Note that the Playground will complain about an empty `info` field; we left it empty for the sake of brevity.

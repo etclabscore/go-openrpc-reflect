@@ -1,4 +1,4 @@
-package go_openrpc_reflect
+package examples
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"net"
 	"time"
 
+	go_openrpc_reflect "github.com/etclabscore/go-openrpc-reflect"
 	"github.com/etclabscore/go-openrpc-reflect/internal/fakearithmetic"
 	ethereumRPC "github.com/ethereum/go-ethereum/rpc"
 )
@@ -33,9 +34,9 @@ func ExampleDocument_DiscoverEthereum() {
 		< The non-boilerplate code. <<EOL
 	*/
 	// Instantiate our document with sane defaults.
-	doc := &Document{}
-	doc.WithMeta(TestMetaRegisterer)     // Note that this is the TEST registerer. The Meta interface must be defined by the application.
-	doc.WithReflector(EthereumReflector) // Use a sane standard designed for the ethereum/go-ethereum/rpc package.
+	doc := &go_openrpc_reflect.Document{}
+	doc.WithMeta(ExampleMetaReflector)                      // Note that this is the TEST registerer. The Meta interface must be defined by the application.
+	doc.WithReflector(go_openrpc_reflect.EthereumReflector) // Use a sane standard designed for the ethereum/go-ethereum/rpc package.
 
 	// Register our calculator service to the rpc.Server and rpc.Doc
 	// I've grouped these together because in larger applications

@@ -1,4 +1,4 @@
-package go_openrpc_reflect
+package examples
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/rpc"
 
+	go_openrpc_reflect "github.com/etclabscore/go-openrpc-reflect"
 	"github.com/etclabscore/go-openrpc-reflect/internal/fakearithmetic"
 	meta_schema "github.com/open-rpc/meta-schema"
 )
@@ -40,8 +41,8 @@ func ExampleDocument_DiscoverStandard2() {
 	*/
 
 	// Instantiate our document with a custom configuration.
-	doc := &Document{}
-	doc.WithMeta(&MetaT{
+	doc := &go_openrpc_reflect.Document{}
+	doc.WithMeta(&go_openrpc_reflect.MetaT{
 		// We're starting an ice cream store!
 		GetInfoFn: func() (info *meta_schema.InfoObject) {
 
@@ -83,7 +84,7 @@ func ExampleDocument_DiscoverStandard2() {
 	// so that they can be evaluated on the fly.
 
 	// Use a sane standard for the mapping (reflecting) Go code to OpenRPC JSON schema data type.
-	doc.WithReflector(StandardReflector)
+	doc.WithReflector(go_openrpc_reflect.StandardReflector)
 
 	// Register our calculator service to the rpc.Server and rpc.Doc
 	// I've grouped these together because in larger applications

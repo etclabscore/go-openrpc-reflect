@@ -1,4 +1,4 @@
-package go_openrpc_reflect
+package examples
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/alecthomas/jsonschema"
+	go_openrpc_reflect "github.com/etclabscore/go-openrpc-reflect"
 	"github.com/etclabscore/go-openrpc-reflect/internal/fakearithmetic"
 	ethereumRPC "github.com/ethereum/go-ethereum/rpc"
 	"github.com/tidwall/gjson"
@@ -35,11 +36,11 @@ func ExampleDocument_DiscoverEthereum2() {
 		< The non-boilerplate code. <<EOL
 	*/
 	// Instantiate our document with sane defaults.
-	doc := &Document{}
-	doc.WithMeta(TestMetaRegisterer)     // Note that this is the TEST registerer. The Meta interface must be defined by the application.
+	doc := &go_openrpc_reflect.Document{}
+	doc.WithMeta(ExampleMetaReflector)     // Note that this is the TEST registerer. The Meta interface must be defined by the application.
 
 	//  Instantiate registration defaults.
-	appReflector := EthereumReflectorT{}
+	appReflector := go_openrpc_reflect.EthereumReflectorT{}
 
 	// Override as needed.
 	appReflector.FnSchemaTypeMap = func () func(ty reflect.Type) *jsonschema.Type {

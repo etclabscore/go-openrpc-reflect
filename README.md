@@ -6,7 +6,7 @@ Use reflection to generate OpenRPC service descriptions from static code and at 
 Not recommended yet for production use.
 
 
-- [GoDocs](https://pkg.go.dev/mod/github.com/etclabscore/go-openrpc-reflect)
+- [GoDocs](https://pkg.go.dev/github.com/etclabscore/go-openrpc-reflect?tab=doc)
 
 ## Theory
 

@@ -131,13 +131,13 @@ func TestEthereumReflectorT_ReceiverMethods(t *testing.T) {
 		`methods.#(name=="calculator_hasBatteries").result.name`:        "bool",
 		`methods.#(name=="calculator_hasBatteries").result.schema.type`: "boolean",
 
-		`methods.#(name=="calculator_history").params.#`:                                   float64(0),
-		`methods.#(name=="calculator_history").result.name`:                                "[]HistoryItem",
-		`methods.#(name=="calculator_history").result.description`:                         "[]HistoryItem",
-		`methods.#(name=="calculator_history").result.schema.type`:                         "array",
-		`methods.#(name=="calculator_history").result.schema.items.type`:                   "object",
-		`methods.#(name=="calculator_history").result.schema.items.properties.Args.type`:   "array",
-		`methods.#(name=="calculator_history").result.schema.items.properties.Method.type`: "string",
+		`methods.#(name=="calculator_history").params.#`:                                     float64(0),
+		`methods.#(name=="calculator_history").result.name`:                                  "[]HistoryItem",
+		`methods.#(name=="calculator_history").result.description`:                           "[]HistoryItem",
+		`methods.#(name=="calculator_history").result.schema.type`:                           "array",
+		`methods.#(name=="calculator_history").result.schema.items.0.type`:                   "object", // fail
+		`methods.#(name=="calculator_history").result.schema.items.0.properties.Args.type`:   "array",  // fail
+		`methods.#(name=="calculator_history").result.schema.items.0.properties.Method.type`: "string", // fail
 
 		`methods.#(name=="calculator_last").params.#`:                             float64(0),
 		`methods.#(name=="calculator_last").result.name`:                          "calculation",

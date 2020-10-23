@@ -196,7 +196,7 @@ func testJSON(t *testing.T, jsonBytes []byte, want map[string]interface{}) {
 	for k, v := range want {
 		got := gjson.GetBytes(jsonBytes, k)
 		if re, ok := v.(*regexp.Regexp); ok {
-				assert.Regexp(t, re, got.String(), k)
+			assert.Regexp(t, re, got.String(), k)
 		} else {
 			// If we expected a string, and got an array of strings,
 			// this is probably the .type, which can be either.
@@ -205,9 +205,7 @@ func testJSON(t *testing.T, jsonBytes []byte, want map[string]interface{}) {
 			if got.IsArray() {
 				assert.EqualValues(t, v, got.Value().([]interface{})[0].(string), k)
 			} else {
-				if !assert.Equal(t, v, got.Value(), k) {
-					t.Log("got.Value", got.Value(), "k value", k)
-				}
+				assert.Equal(t, v, got.Value(), k)
 			}
 		}
 	}

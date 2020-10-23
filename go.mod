@@ -2,7 +2,6 @@ module github.com/etclabscore/go-openrpc-reflect
 
 go 1.13
 
-// require github.com/open-rpc/meta-schema v0.0.43
 require github.com/open-rpc/meta-schema v0.0.0-20201023174056-aa7982132ac2
 
 require (
@@ -17,8 +16,3 @@ require (
 	github.com/tidwall/gjson v1.6.0
 	golang.org/x/net v0.0.0-20201022231255-08b38378de70 // indirect
 )
-
-//replace github.com/open-rpc/meta-schema => github.com/meowsbits/meta-schema v0.0.43
-
-//HACKING:replace github.com/open-rpc/meta-schema => /home/ia/dev/open-rpc/meta-schema
-//replace github.com/open-rpc/meta-schema => /home/ia/dev/open-rpc/meta-schema

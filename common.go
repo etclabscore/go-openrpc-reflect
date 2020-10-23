@@ -37,8 +37,10 @@ func init() {
 	required, deprecated := true, false
 
 	nullSchema = meta_schema.JSONSchema{
-		Type: &meta_schema.AnyOfAny17L18NF5UnorderedSetOfAny17L18NF5VWcS9ROiRlIv9QVc{
-			Any17L18NF5: (*meta_schema.Any17L18NF5)(&nullT),
+		JSONSchemaObject: &meta_schema.JSONSchemaObject{
+			Type: &meta_schema.Type{
+				SimpleTypes: (*meta_schema.SimpleTypes)(&nullT),
+			},
 		}}
 
 	nullContentDescriptor = meta_schema.ContentDescriptorObject{

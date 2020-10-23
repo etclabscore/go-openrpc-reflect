@@ -255,7 +255,7 @@ func TestStandardReflectorT_GetSchema(t *testing.T) {
 		for k, v := range c.want {
 			switch {
 			case k == "type":
-				assert.Equal(t, v, *schema.Type.Any17L18NF5)
+				assert.Equal(t, v, (*schema.JSONSchemaObject.Type.SimpleTypes))
 			}
 		}
 	}

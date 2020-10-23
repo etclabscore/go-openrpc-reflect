@@ -262,7 +262,7 @@ func ExampleDocument_DiscoverStandard() {
 	}
 
 	fmt.Println(*discoverReply.Openrpc)
-	// Output: 1.2.4
+	// Output: 1.2.6
 
 	j, _ := json.MarshalIndent(discoverReply, "", "    ")
 	log.Println(string(j))
@@ -278,7 +278,7 @@ Running this Example test yields the following response:
 2020/05/18 18:49:24 Serving RPC server on port 127.0.0.1:40861
 2020/05/18 18:49:24 43
 2020/05/18 18:49:24 {
-    "openrpc": "1.2.4",
+    "openrpc": "1.2.6",
     "info": null,
     "methods": [
         {

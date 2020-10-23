@@ -92,6 +92,6 @@ func ExampleDocument_DiscoverEthereum2() {
 	fmt.Println(got.Value())
 
 	// Output:
-	// 1.2.4
+	// 1.2.6
 	// myInteger
 }

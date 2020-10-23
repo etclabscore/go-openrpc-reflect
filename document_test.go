@@ -67,7 +67,7 @@ func TestDocument_Discover(t *testing.T) {
 		t.Log(string(b))
 
 		jsonTests := map[string]interface{}{
-			"openrpc":                 "1.2.4",
+			"openrpc":                 "1.2.6",
 			"info.title":              "Calculator API",
 			"info.version":            regexp.MustCompile(time.Now().Format("2006")),
 			"servers.0.url":           listener.Addr().String(),
@@ -108,7 +108,7 @@ func TestDocument_Discover(t *testing.T) {
 		t.Log(str)
 
 		jsonTests := map[string]interface{}{
-			"openrpc":                        "1.2.4",
+			"openrpc":                        "1.2.6",
 			"info.title":                     "Calculator API",
 			"info.version":                   regexp.MustCompile(time.Now().Format("2006")),
 			"servers.0.url":                  listener.Addr().String(),

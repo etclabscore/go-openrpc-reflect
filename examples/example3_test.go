@@ -74,7 +74,7 @@ func ExampleDocument_DiscoverEthereum() {
 		log.Fatal(err)
 	}
 	fmt.Println(m["openrpc"])
-	// Output: 1.2.4
+	// Output: 1.2.6
 }
 
 func makeRequest(request string, listener net.Listener) ([]byte, error) {

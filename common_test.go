@@ -205,7 +205,9 @@ func testJSON(t *testing.T, jsonBytes []byte, want map[string]interface{}) {
 			if got.IsArray() {
 				assert.EqualValues(t, v, got.Value().([]interface{})[0].(string), k)
 			} else {
-				assert.Equal(t, v, got.Value(), k)
+				if !assert.Equal(t, v, got.Value(), k) {
+					t.Log("got.Value", got.Value(), "k value", k)
+				}
 			}
 		}
 	}

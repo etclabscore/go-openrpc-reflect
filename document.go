@@ -165,7 +165,7 @@ func (d *Document) Discover() (*meta_schema.OpenrpcDocument, error) {
 	getServersFn := d.meta.GetServers()
 	servers, err := getServersFn(d.listeners)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("listener error: %w", err)
 	}
 	out.Servers = servers
 
@@ -186,7 +186,7 @@ func (d *Document) Discover() (*meta_schema.OpenrpcDocument, error) {
 		name := d.receiverNames[i]
 		ms, err := d.reflector.ReceiverMethods(name, rec)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("receiver method error: %w", err)
 		}
 		methods = append(methods, ms...)
 	}

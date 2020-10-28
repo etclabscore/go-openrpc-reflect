@@ -111,14 +111,14 @@ func receiverMethods(methodHandler MethodRegisterer, name string, receiver inter
 			return nil, err
 		}
 
-		params := []meta_schema.OneOfContentDescriptorObjectReferenceObjectI0Ye8PrQ{}
+		params := []meta_schema.ContentDescriptorOrReference{}
 		paramCDs, err := methodHandler.GetMethodParams(rval, method, fdecl)
 		if err != nil {
 			return nil, err
 		}
 		for i := range paramCDs {
 			cp := paramCDs[i]
-			params = append(params, meta_schema.OneOfContentDescriptorObjectReferenceObjectI0Ye8PrQ{
+			params = append(params, meta_schema.ContentDescriptorOrReference{
 				ContentDescriptorObject: &cp,
 			})
 		}

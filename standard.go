@@ -44,6 +44,7 @@ type ReceiverReflectorT struct {
 	FnSchemaIgnoredTypes func () []interface{}
 	FnSchemaTypeMap func () func(ty reflect.Type) *jsonschema.Type
 	FnSchemaMutations func (ty reflect.Type) []func (*spec.Schema) func(*spec.Schema) error
+	FnSchemaExamples func (ty reflect.Type) (examples *meta_schema.Examples, err error)
 }
 
 type StandardReflectorT struct{
@@ -382,6 +383,13 @@ func (c *StandardReflectorT) SchemaMutations(ty reflect.Type) []func(*spec.Schem
 		SchemaMutationExpand,
 		SchemaMutationRemoveDefinitionsField,
 	}
+}
+
+func (c *StandardReflectorT) SchemaExamples(ty reflect.Type) (examples *meta_schema.Examples, err error) {
+	if c.FnSchemaExamples != nil {
+		return c.FnSchemaExamples(ty)
+	}
+	return nil, nil
 }
 
 // ------------------------------------------------------------------------------

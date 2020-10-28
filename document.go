@@ -87,6 +87,7 @@ type SchemaRegisterer interface {
 	// They will be run in order.
 	// Function wrapping allows closure fn to have context of root schema.
 	SchemaMutations(ty reflect.Type) []func(*spec.Schema) func(*spec.Schema) error
+	SchemaExamples(ty reflect.Type) (examples *meta_schema.Examples, err error)
 }
 
 //type Service int

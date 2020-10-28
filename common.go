@@ -331,6 +331,12 @@ func buildJSONSchemaObject(registerer SchemaRegisterer, r reflect.Value, m refle
 		}
 	}
 
+	examples, err := registerer.SchemaExamples(ty)
+	if err != nil {
+		return schema, err
+	}
+	schema.JSONSchemaObject.Examples = examples // ok if nil
+
 	return schema, nil
 }
 

@@ -1,78 +1,116 @@
 # go-openrpc-reflect
 
-Use reflection to generate OpenRPC service descriptions from static code and at runtime.
+Use reflection to generate [OpenRPC](https://spec.open-rpc.org/) service descriptions from static code and at runtime.
 
-:construction: __WARNING__ This is a work in progress, and is being actively developed.
-Not recommended yet for production use.
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/etclabscore/go-openrpc-reflect)
 
-
-- [GoDocs](https://pkg.go.dev/github.com/etclabscore/go-openrpc-reflect?tab=doc)
-
-## Theory
+## Design
 
 Go's `net/rpc` service works by using a code-style convention
 to structure a reflection-based implementation to build RPC servers around business logic.
 
 This package works in a similar way, but instead of building RPC servers, it builds service descriptions
 (of those servers) which meet the [OpenRPC Specification](https://spec.open-rpc.org/). Differentially, this package
-doesn't strictly enforce any specific code-style conventions, but provides a (hopefully) extensible pattern
-that can be moulded to fit nearly any RPC service implementation, whether hand-rolled or conventional. (Relatively) sane defaults
+doesn't strictly enforce any specific code-style conventions, but provides an extensible pattern
+that can be moulded to fit nearly any RPC service implementation, whether hand-rolled or conventional. Sane defaults
 are provided fitting the conventions of popular Go RPC libraries, namely `net/rpc` and `ethereum/go-ethereum/rpc`.
 
-This is intended to open the door to OpenRPC adoption -- and service discovery patterns in general -- by removing the 
+this project is intended to open the door to openrpc adoption — and service discovery patterns in general — by removing the 
 hurdle of requiring a human to actually sit down and write (and maintain) a complete and correct description of
 potentially complex services.
 
 It enables APIs to provide accurate, complete, _and dynamic_ descriptions of themselves
-which can adapt to varying permissions and visibility scopes, potentially numerous and diverse server businesses, 
-and different transport contexts.
+which can adapt to varying permissions and visibility scopes, server businesses, and transport contexts.
+
+---
+
+## Default Configurations
+
+Two default `Reflector` configurations are included:
+ 
+- `StandardReflector` is intended to pair well with `net/rpc`, 
+- `EthereumReflector` pairs with `github.com/ethereum/go-ethereum/rpc`.
+
+These implementations can be customized to a large degree, or can be used as references to build your own from scratch.
+The `EthereumReflector` is basically a customized version of the `StandardReflector`. 
+
+#### `StandardReflector`
+
+The `StandardReflector` expects your API to be built following [the pattern supported by Go's `net/rpc` library](https://golang.org/pkg/net/rpc/),
+which looks like this:
+
+```go
+func (t *T) MethodName(argType T1, replyType *T2) error
+```
+
+#### `EthereumReflector`
+
+The `EthereumReflector` expects your API to be built following [the pattern supported by the Ethereum Foundation's 
+`github.com/ethereum/go-ethereum/rpc` package](https://pkg.go.dev/github.com/ethereum/go-ethereum/rpc), which looks like this:
+
+```go
+func (s *CalcService) Add(a, b int) (int, error)
+```
+
+## Library Limitations
+
+- Parameter and result type discovery only works for exported fields. If your API uses types that don't expose fields that you want to be
+documented, you'll need to [use a custom schema definition](#TODO).
+- Custom encoding/marshaling. If your API or types use custom encoding (_eg._ type `json.[Un|]Marshal` methods), you
+may need to use custom schema definitions as above. 
+- As of [Go 1.13](https://golang.org/doc/go1.13#go-command), Go provides a `go build` flag `-trimpath`, which removes all
+file system paths from the compiled executable, to improve build reproducibility (and reduce artifact sizes). Stripping
+file paths from their absolute context at build time prevents the AST parsing steps in the library from knowing where to look.
+This may be addressed in later versions of this library.   
 
 ## Short Example
 
 ```go
-    // Follow the standard Go RPC service establishment pattern.
-    calculatorRPCService := new(MyCalculator)
-    server := rpc.NewServer()
-    // Register the receiver to the net/rpc server.
-    err = server.Register(calculatorRPCService)
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    // Instantiate our document with sane defaults.
-    doc := &go_openrpc_reflect.Document{}
-    // Set up some minimum-viable application-specific information.
-    doc.WithMeta(&go_openrpc_reflect.MetaT{
-        GetServersFn: func() func(listeners []net.Listener) (*meta_schema.Servers, error) {
-            return func([]net.Listener) (*meta_schema.Servers, error) { return nil, nil }
-        },
-        GetInfoFn: func() (info *meta_schema.InfoObject) {
-            return nil
-        },
-        GetExternalDocsFn: func() (exdocs *meta_schema.ExternalDocumentationObject) {
-            return nil
-        },
-    })
-    // Use a provided default Standard reflector pattern.
-    doc.WithReflector(go_openrpc_reflect.StandardReflector)
-    
-    // Register the receiver to the doc.
-    doc.RegisterReceiver(calculatorRPCService)
+// Follow the standard Go RPC service establishment pattern.
+calculatorRPCService := new(MyCalculator)
+server := rpc.NewServer()
+// Register the receiver to the net/rpc server.
+err = server.Register(calculatorRPCService)
+if err != nil {
+    log.Fatal(err)
+}
 
-    // Wrap the document in a very simple default 'RPC' service struct, which provides one method: Discover,
-    // which returns the doc.Discover() value.
-    rpcDiscoverService := &RPC{doc}
+// Instantiate our document with sane defaults.
+doc := &go_openrpc_reflect.Document{}
+// Set up some minimum-viable application-specific information.
+doc.WithMeta(&go_openrpc_reflect.MetaT{
+    GetServersFn: func() func(listeners []net.Listener) (*meta_schema.Servers, error) {
+        return func([]net.Listener) (*meta_schema.Servers, error) { return nil, nil }
+    },
+    GetInfoFn: func() (info *meta_schema.InfoObject) {
+        return nil
+    },
+    GetExternalDocsFn: func() (exdocs *meta_schema.ExternalDocumentationObject) {
+        return nil
+    },
+})
+// Use a provided default Standard reflector pattern.
+doc.WithReflector(go_openrpc_reflect.StandardReflector)
 
-    // Register the OpenRPC Document service back to the rpc.Server.
-    err = server.Register(rpcDiscoverService)
-    if err != nil {
-        log.Fatal(err)
-    }
+// Register the receiver to the doc.
+doc.RegisterReceiver(calculatorRPCService)
+
+// Wrap the document in a very simple default 'RPC' service struct, which provides one method: Discover,
+// which returns the doc.Discover() value.
+rpcDiscoverService := &RPC{doc}
+
+// Register the OpenRPC Document service back to the rpc.Server.
+err = server.Register(rpcDiscoverService)
+if err != nil {
+    log.Fatal(err)
+}
 ```
 
 ## Full Example
 
 This example is taken directly from [./examples/example1_test.go](./examples/example1_test.go). Please read the other test cases in examples/ to see more implementation options.
+
+<details><summary>Code</summary>
 
 ```go
 package examples
@@ -271,6 +309,10 @@ func ExampleDocument_DiscoverStandard() {
 
 ```
 
+</details>
+
+<details><summary>OpenRPC Document Response</summary>
+
 Running this Example test yields the following response:
 
 ```txt
@@ -316,6 +358,12 @@ PASS
 
 ```
 
+</details>
+
+<details><summary>OpenRPC Document Playground</summary>
+
 Which can then be copy-pasted into the [OpenRPC Playground](https://playground.open-rpc.org/?url=https://gist.githubusercontent.com/meowsbits/986d6afdfb5c8ccb9f7afde80f8123cc/raw/mycalculator.openrpc.json) for review: 
 
 ![example-screenshot](2020-05-18-185019_1897x981_screenshot.png)
+
+</details>

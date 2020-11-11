@@ -124,7 +124,7 @@ func TestEthereumReflectorT_ReceiverMethods(t *testing.T) {
 		`methods.#(name=="calculator_bigMul").params.0.name`:                        "argA",
 		`methods.#(name=="calculator_bigMul").params.0.description`:                 "*big.Int",
 		`methods.#(name=="calculator_bigMul").params.0.schema.type`:                 "object",
-		`methods.#(name=="calculator_bigMul").params.0.schema.additionalProperties`: map[string]interface{}{},
+		`methods.#(name=="calculator_bigMul").params.0.schema.additionalProperties`: false,
 
 		`methods.#(name=="calculator_div").deprecated`: true,
 

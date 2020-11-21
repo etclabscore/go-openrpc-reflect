@@ -5,7 +5,6 @@ go 1.13
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921
 	github.com/etclabscore/go-jsonschema-walk v0.0.6
-	github.com/ethereum/go-ethereum v1.9.12
 	github.com/go-openapi/spec v0.19.11
 	github.com/go-openapi/swag v0.19.11 // indirect
 	github.com/iancoleman/orderedmap v0.1.0 // indirect

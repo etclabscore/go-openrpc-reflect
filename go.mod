@@ -11,6 +11,6 @@ require (
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/open-rpc/meta-schema v0.0.0-20201029221707-1b72ef2ea333
 	github.com/stretchr/testify v1.4.0
-	github.com/tidwall/gjson v1.6.0
+	github.com/tidwall/gjson v1.9.1
 	golang.org/x/net v0.0.0-20201022231255-08b38378de70 // indirect
 )

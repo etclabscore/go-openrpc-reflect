@@ -47,7 +47,7 @@ func init() {
 	nullContentDescriptor = meta_schema.ContentDescriptorObject{
 		Name:        (*meta_schema.ContentDescriptorObjectName)(&nullS),
 		Description: (*meta_schema.ContentDescriptorObjectDescription)(&nullS),
-		//Summary:     (*meta_schema.ContentDescriptorObjectSummary)(&nullS),
+		// Summary:     (*meta_schema.ContentDescriptorObjectSummary)(&nullS),
 		Schema:     &nullSchema,
 		Required:   (*meta_schema.ContentDescriptorObjectRequired)(&required),
 		Deprecated: (*meta_schema.ContentDescriptorObjectDeprecated)(&deprecated),
@@ -209,15 +209,15 @@ func buildContentDescriptorObject(registerer ContentDescriptorRegisterer, r refl
 		return cd, err
 	}
 
-	//// If name == description, eg. 'hexutil.Bytes' == 'hexutil.Bytes',
-	//// that means the field represent an unnamed variable. Mostly likely an unnamed return value.
-	//// Assigning a content descriptor name as a Go type name may be undesirable,
-	//// particularly since the 'name' field is used in by-name paramStructure cases to key
-	//// the parameter object.
-	//// So instead of using this default, let's set the name value to be something
-	//// generic given the context of the schema instead.
-	////
-	//if name == description {
+	// // If name == description, eg. 'hexutil.Bytes' == 'hexutil.Bytes',
+	// // that means the field represent an unnamed variable. Mostly likely an unnamed return value.
+	// // Assigning a content descriptor name as a Go type name may be undesirable,
+	// // particularly since the 'name' field is used in by-name paramStructure cases to key
+	// // the parameter object.
+	// // So instead of using this default, let's set the name value to be something
+	// // generic given the context of the schema instead.
+	// //
+	// if name == description {
 	//	// Field is unnamed.
 	//	if schema.Title != nil {
 	//		name = (string)(*schema.Title)
@@ -241,7 +241,7 @@ func buildContentDescriptorObject(registerer ContentDescriptorRegisterer, r refl
 	//			name = n
 	//		}
 	//	}
-	//}
+	// }
 
 	cd = meta_schema.ContentDescriptorObject{
 		Name:        (*meta_schema.ContentDescriptorObjectName)(&name),
@@ -369,19 +369,21 @@ func getAstFuncDecl(r reflect.Value, m reflect.Method) (*ast.FuncDecl, error) {
 		}
 
 		fnRecName := ""
-		for _, l := range fn.Recv.List {
-			if fnRecName != "" {
-				break
-			}
+		if fn.Recv != nil && fn.Recv.List != nil && len(fn.Recv.List) > 0 {
+			for _, l := range fn.Recv.List {
+				if fnRecName != "" {
+					break
+				}
 
-			i, ok := l.Type.(*ast.Ident)
-			if ok {
-				fnRecName = i.Name
-				continue
-			}
-			s, ok := l.Type.(*ast.StarExpr)
-			if ok {
-				fnRecName = fmt.Sprintf("%v", s.X)
+				i, ok := l.Type.(*ast.Ident)
+				if ok {
+					fnRecName = i.Name
+					continue
+				}
+				s, ok := l.Type.(*ast.StarExpr)
+				if ok {
+					fnRecName = fmt.Sprintf("%v", s.X)
+				}
 			}
 		}
 

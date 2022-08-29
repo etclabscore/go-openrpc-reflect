@@ -127,7 +127,7 @@ func (e *EthereumReflectorT) GetMethodResult(r reflect.Value, m reflect.Method, 
 		return nullContentDescriptor, nil
 	}
 
-	if m.Type.Out(0) == errType {
+	if m.Type.NumOut() == 0 || m.Type.Out(0) == errType {
 		return nullContentDescriptor, nil
 	}
 
